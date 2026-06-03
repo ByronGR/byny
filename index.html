@@ -1956,6 +1956,60 @@ function mName(m,y){return new Date(y,m,1).toLocaleDateString('es-CO',{month:'lo
 function mShort(m,y){return new Date(y,m,1).toLocaleDateString('es-CO',{month:'short'}).toUpperCase();}
 function daysInMonth(m,y){return new Date(y,m+1,0).getDate();}
 
+function getBikeRateForDate(bike,ds){
+  if(!bike)return Number(DB.settings?.rate)||DR;
+  if(bike.rateHistory&&bike.rateHistory.length){
+    const applicable=bike.rateHistory
+      .filter(r=>r.fromDate&&r.fromDate<=ds)
+      .sort((a,b)=>b.fromDate.localeCompare(a.fromDate));
+    if(applicable.length)return Number(applicable[0].rate)||Number(bike.rate)||Number(DB.settings?.rate)||DR;
+  }
+  return Number(bike.rate)||Number(DB.settings?.rate)||DR;
+}
+
+function getBikeCurrentRate(bike){
+  return getBikeRateForDate(bike,tod());
+}
+
+function getRentalPayments(){
+  return (DB.payments||[]).filter(p=>p.payType!=='purchase'&&p.payType!=='general'&&p.bikeId);
+}
+
+function getMonthlyPayments(m,y,{rentalOnly=false}={}){
+  return (rentalOnly?getRentalPayments():(DB.payments||[])).filter(p=>{
+    if(!p.date)return false;
+    const d=new Date(p.date+'T12:00:00');
+    return d.getMonth()===m&&d.getFullYear()===y;
+  });
+}
+
+function getBikeOwedDays(bike){
+  const bal=calcBikeBalance(bike);
+  const rate=getBikeCurrentRate(bike);
+  return rate>0?Math.ceil(bal/rate):0;
+}
+
+function isRecurringExpense(e){
+  const cat=e.cat||'';
+  if(['aceite','frenos','cadena','bujia','filtro','bateria'].includes(cat))return true;
+  if(['llantas','soat','tecnica','documentacion','reparacion','programado','revision','mantenimiento'].includes(cat)){
+    const text=((e.desc||'')+' '+cat).toLowerCase();
+    return /(aceite|pastilla|pastillas|freno|frenos|cadena|buj[ií]a|filtro|lavada|parqueadero|tornillo|bombillo|cable)/.test(text);
+  }
+  const text=((e.desc||'')+' '+cat).toLowerCase();
+  return /(aceite|pastilla|pastillas|freno|frenos|cadena|buj[ií]a|filtro|lavada|parqueadero|tornillo|bombillo|cable)/.test(text);
+}
+
+function recurringExpenseDailyAverage(){
+  const now=new Date();
+  const end=tod();
+  const startDate=new Date(now.getFullYear(),now.getMonth(),now.getDate()-89);
+  const start=`${startDate.getFullYear()}-${String(startDate.getMonth()+1).padStart(2,'0')}-${String(startDate.getDate()).padStart(2,'0')}`;
+  const exps=(DB.expenses||[]).filter(e=>e.date&&e.date>=start&&e.date<=end&&isRecurringExpense(e));
+  const total=exps.reduce((s,e)=>s+Number(e.amount||0),0);
+  return total/90;
+}
+
 // Pico y placa check
 function isPYP(dateStr, plateDigit){
   if(plateDigit===''||plateDigit===null||plateDigit===undefined)return false;
@@ -3243,7 +3297,8 @@ function saveFBConfig(){
 }
 function exportPDF(){
   const mName2=new Date(VY,VM,1).toLocaleDateString('es-CO',{month:'long',year:'numeric'});
-  const pays=DB.payments.filter(p=>{const d=new Date(p.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
+  const pays=getMonthlyPayments(VM,VY);
+  const rentalPays=getMonthlyPayments(VM,VY,{rentalOnly:true});
   const exps=DB.expenses.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
   const income=pays.reduce((s,p)=>s+Number(p.amount),0);
   const expenses=exps.reduce((s,e)=>s+Number(e.amount),0);
@@ -3317,7 +3372,7 @@ function render(){
 function renderKPIs(){
   const el=document.getElementById('dash-hero');if(!el)return;
   const elSmall=document.getElementById('dash-small');
-  const pays=DB.payments.filter(p=>{const d=new Date(p.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
+  const pays=getMonthlyPayments(VM,VY);
   let exps;
   if(expFrom||expTo){
     exps=DB.expenses.filter(e=>(!expFrom||e.date>=expFrom)&&(!expTo||e.date<=expTo));
@@ -3325,7 +3380,7 @@ function renderKPIs(){
     exps=DB.expenses.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
   }
   const rets=DB.retiros.filter(r=>{const d=new Date(r.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
-  const income=pays.reduce((s,p)=>s+p.amount,0);
+  const income=pays.reduce((s,p)=>s+Number(p.amount||0),0);
   const expenses=exps.reduce((s,e)=>s+e.amount,0);
   const retiros=rets.reduce((s,r)=>s+r.amount,0);
   const ganancia=income-expenses;
@@ -3334,31 +3389,36 @@ function renderKPIs(){
   let totalBillable=0,totalPaidDays=0;
   const totalDaysM=daysInMonth(VM,VY);
   DB.bikes.filter(b=>b.renter).forEach(b=>{
-    const pyp=pypDaysInMonth(VM,VY,b.plateDigit);
-    const grace=graceForBike(b.id,VM,VY);
-    const billable=Math.max(1,totalDaysM-pyp-grace);
-    totalBillable+=billable;
-    const paidThisMonth=pays.filter(p=>p.bikeId===b.id).reduce((s,p)=>s+p.amount,0);
-    const rate=b.rate||DB.settings.rate||DR;
-    const paidDays=paidThisMonth/rate;
-    totalPaidDays+=Math.min(paidDays,billable);
+    let ledger={};
+    try{const r=buildDayLedger(b.id);ledger=r.ledger||{};}catch(e){}
+    for(let d=1;d<=totalDaysM;d++){
+      const ds=`${VY}-${String(VM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if(isPYP(ds,b.plateDigit)||(DB.graceDays||[]).find(g=>g.bikeId===b.id&&g.date===ds))continue;
+      totalBillable++;
+      if(ledger[ds]?.status==='paid')totalPaidDays++;
+      else if(ledger[ds]?.status==='partial'){
+        const rate=getBikeRateForDate(b,ds);
+        totalPaidDays+=Math.min(1,(Number(ledger[ds].amount)||0)/rate);
+      }
+    }
   });
-  const util=totalBillable>0?Math.round(totalPaidDays/totalBillable*100):0;
   const active=DB.bikes.filter(b=>b.renter).length;
-  // Expected income = remaining days this month × rate per active bike (minus PYP)
+  // Expected month-end net = recorded income + remaining billable rental days - recorded and projected recurring expenses.
   const todayDate=new Date();
   const daysInM=daysInMonth(VM,VY);
-  let expectedRemaining=0;
+  let expectedRemainingIncome=0,remainingDaysForAvg=0;
   if(VM===todayDate.getMonth()&&VY===todayDate.getFullYear()){
     DB.bikes.filter(b=>b.renter).forEach(b=>{
-      const rate=Number(b.rate)||DR;
       for(let d=todayDate.getDate()+1;d<=daysInM;d++){
         const ds=`${VY}-${String(VM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        if(!isPYP(ds,b.plateDigit))expectedRemaining+=rate;
+        if(isPYP(ds,b.plateDigit)||(DB.graceDays||[]).find(g=>g.bikeId===b.id&&g.date===ds))continue;
+        expectedRemainingIncome+=getBikeRateForDate(b,ds);
+        remainingDaysForAvg++;
       }
     });
   }
-  const projectedTotal=income+expectedRemaining;
+  const projectedRecurringExpenses=Math.round(recurringExpenseDailyAverage()*remainingDaysForAvg);
+  const projectedTotal=income+expectedRemainingIncome-expenses-projectedRecurringExpenses;
   // All-time caja
   const allIncome=DB.payments.reduce((s,p)=>s+Number(p.amount),0);
   const allExp=DB.expenses.reduce((s,e)=>s+Number(e.amount),0);
@@ -3367,24 +3427,27 @@ function renderKPIs(){
 
   // Utilization — days elapsed so far this month only
   let elapsedBillable=0,elapsedPaidDays=0;
-  const todayDay=todayDate.getDate();
+  const isCurrentMonth=VM===todayDate.getMonth()&&VY===todayDate.getFullYear();
+  const selectedMonthStart=new Date(VY,VM,1);
+  const currentMonthStart=new Date(todayDate.getFullYear(),todayDate.getMonth(),1);
+  const todayDay=isCurrentMonth?todayDate.getDate():(selectedMonthStart<currentMonthStart?daysInM:0);
   DB.bikes.filter(b=>b.renter).forEach(b=>{
-    const rate2=Number(b.rate)||DR;
-    let pypEl=0,graceEl=0;
+    let ledger={};
+    try{const r=buildDayLedger(b.id);ledger=r.ledger||{};}catch(e){}
     for(let d=1;d<=todayDay;d++){
       const ds=`${VY}-${String(VM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      if(isPYP(ds,b.plateDigit))pypEl++;
-      else if(DB.graceDays.find(g=>g.bikeId===b.id&&g.date===ds))graceEl++;
+      if(isPYP(ds,b.plateDigit)||(DB.graceDays||[]).find(g=>g.bikeId===b.id&&g.date===ds))continue;
+      elapsedBillable++;
+      if(ledger[ds]?.status==='paid')elapsedPaidDays++;
+      else if(ledger[ds]?.status==='partial'){
+        const rate2=getBikeRateForDate(b,ds);
+        elapsedPaidDays+=Math.min(1,(Number(ledger[ds].amount)||0)/rate2);
+      }
     }
-    const billableEl=Math.max(1,todayDay-pypEl-graceEl);
-    elapsedBillable+=billableEl;
-    const paidThisMonth2=pays.filter(p=>p.bikeId===b.id).reduce((s,p)=>s+Number(p.amount),0);
-    elapsedPaidDays+=Math.min(paidThisMonth2/rate2,billableEl);
   });
   const utilElapsed=elapsedBillable>0?Math.round(elapsedPaidDays/elapsedBillable*100):0;
 
-  const defaultRate=Number(DB.bikes.find(b=>b.renter)?.rate)||DR;
-  const owedDaysTotal=defaultRate>0?Math.ceil(owed/defaultRate):0;
+  const owedDaysTotal=DB.bikes.reduce((s,b)=>s+(b.renter?getBikeOwedDays(b):0),0);
   el.innerHTML=`
     <div class="dash-hero-card">
       <div class="dash-hero-label">En caja</div>
@@ -3403,7 +3466,7 @@ function renderKPIs(){
     </div>
   `;
   if(elSmall)elSmall.innerHTML=`
-    <div class="dash-small" style="background:var(--sky-bg);border:1px solid var(--sky-line)"><span class="dash-small-label" style="color:var(--sky)">Esperado fin de mes</span><div class="dash-small-val" style="color:var(--sky)">${fmt(projectedTotal)}</div><div class="dash-small-sub">+${fmt(expectedRemaining)} por cobrar</div></div>
+    <div class="dash-small" style="background:var(--sky-bg);border:1px solid var(--sky-line)"><span class="dash-small-label" style="color:var(--sky)">Esperado fin de mes</span><div class="dash-small-val" style="color:${projectedTotal>=0?'var(--sky)':'var(--fire)'}">${fmt(projectedTotal)}</div><div class="dash-small-sub">+${fmt(expectedRemainingIncome)} arriendo · -${fmt(projectedRecurringExpenses)} gasto prom.</div></div>
     <div class="dash-small"><span class="dash-small-label">Ingresos</span><div class="dash-small-val">${fmt(income)}</div></div>
     <div class="dash-small"><span class="dash-small-label">Utilización</span><div class="dash-small-val">${utilElapsed}%</div><div class="dash-small-sub">días transcurridos</div></div>
     <div class="dash-small"><span class="dash-small-label">Motos activas</span><div class="dash-small-val">${active}/${DB.bikes.length}</div></div>
@@ -3469,8 +3532,8 @@ function renderDocAlerts(){
   });
   el.innerHTML=[...late.map(b=>{
     const bal=calcBikeBalance(b);
-    const rate=Number(b.rate)||DR;
-    const days=Math.ceil(bal/rate);
+    const rate=getBikeCurrentRate(b);
+    const days=rate>0?Math.ceil(bal/rate):0;
     const phone=(b.phone||'').replace(/\D/g,'');
     const msg=encodeURIComponent(`Hola ${b.renter}, tienes pendiente ${fmt(bal)} (${days} día${days!==1?'s':''}) de arriendo. Por favor ponerse al día 🙏 — Byny Rental`);
     const waLink=phone?`https://wa.me/${phone}?text=${msg}`:'';
@@ -3855,8 +3918,8 @@ function toggleBikeMore(id){
 
 function renderBikeRow(b,now){
   const owed=calcBikeBalance(b);
-  const rate=Number(b.rate)||DR;
-  const owedDays=owed>0?Math.ceil(owed/rate):0;
+  const rate=getBikeCurrentRate(b);
+  const owedDays=getBikeOwedDays(b);
   const pp=getPurchaseProgress(b.id);
   const pypToday=b.plateDigit!==''&&b.plateDigit!==null&&b.plateDigit!==undefined&&isPYP(tod(),b.plateDigit);
   const phone=(b.phone||'').replace(/[^0-9]/g,'');
@@ -4549,7 +4612,7 @@ function renderContratos(){
     const ct=getBikeContract(b.id);
     const type=ct?ct.type:'rental';
     const owed=calcBikeBalance(b);
-    const owedDays=owed>0?Math.ceil(owed/(Number(b.rate)||DR)):0;
+    const owedDays=getBikeOwedDays(b);
     const pp=getPurchaseProgress(b.id);
     const typeLabels={rental:'Solo arriendo',purchase:'Solo compra',both:'Arriendo + Compra'};
     const typeBadge=`badge ${type==='rental'?'badge-rental':type==='purchase'?'badge-purchase':'badge-both'}`;
@@ -4781,8 +4844,8 @@ function renderDriverCal(){
 function renderDriverPortal(driver){
   const bike=DB.bikes.find(b=>b.driverId===driver.id)||DB.bikes.find(b=>b.renter&&(b.renter||'').toLowerCase().includes((driver.fname||'').toLowerCase()));
   const owed=bike?calcBikeBalance(bike):0;
-  const owedDays=bike&&owed>0?Math.ceil(owed/(Number(bike.rate)||DR)):0;
-  const rate=bike?Number(bike.rate)||DR:DR;
+  const owedDays=bike?getBikeOwedDays(bike):0;
+  const rate=bike?getBikeCurrentRate(bike):DR;
   const maint=bike?maintStatus(bike):[];
   const subs=(DB.pendingApprovals||[]).filter(s=>s.cc===driver.cc).slice(0,5);
 
@@ -4976,7 +5039,7 @@ function calcDriverPayCalc(val){
   const el=document.getElementById('dpay-calc');
   if(!amt){el.style.display='none';return;}
   const bike=DB.bikes.find(b=>b.driverId===currentDriverData?.id||(b.renter||'').toLowerCase().includes((currentDriverData?.fname||'').toLowerCase()));
-  const rate2=bike?Number(bike.rate)||DR:DR;
+  const rate2=bike?getBikeCurrentRate(bike):DR;
   const owed2=bike?calcBikeBalance(bike):0;
   const days2=Math.floor(amt/rate2);
   const bal2=owed2-amt;
@@ -5283,8 +5346,8 @@ function openDriverProfile(driverId){
       const ct=getBikeContract(bike.id);
       const pp=getPurchaseProgress(bike.id);
       const owed2=calcBikeBalance(bike);
-      const rate2=Number(bike.rate)||DR;
-      const owedDays2=owed2>0?Math.ceil(owed2/rate2):0;
+      const rate2=getBikeCurrentRate(bike);
+      const owedDays2=getBikeOwedDays(bike);
       const typeLabel=ct?(ct.type==='both'?'Arriendo + Compra':ct.type==='purchase'?'Solo compra':'Solo arriendo'):'Solo arriendo';
       return`<div class="divider"></div>
         <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;margin-bottom:.75rem">Contrato</div>
@@ -5382,7 +5445,7 @@ function renderPendingApprovals(){
   // Late payment alerts
   late.forEach(b=>{
     const bal=calcBikeBalance(b);
-    const days2=Math.ceil(bal/(Number(b.rate)||DR));
+    const days2=getBikeOwedDays(b);
     const phone=(b.phone||'').replace(/\D/g,'');
     const msg=encodeURIComponent(`Hola ${b.renter}, tienes pendiente ${fmt(bal)} (${days2} día${days2!==1?'s':''}) de arriendo. Por favor ponerse al día 🙏 — Byny Rental`);
     html+=`<div class="alert fire" style="margin-bottom:.5rem">
@@ -5564,12 +5627,9 @@ function buildDayLedger(bikeId){
   const bike=DB.bikes.find(b=>b.id===bikeId);if(!bike||!bike.startDate)return{};
   // Get rate for a specific date (rate history support)
   const getRateForDate=(ds)=>{
-    if(!bike.rateHistory||!bike.rateHistory.length)return Number(bike.rate)||DR;
-    // Find the most recent rate that started on or before this date
-    const applicable=bike.rateHistory.filter(r=>r.fromDate<=ds).sort((a,b)=>b.fromDate.localeCompare(a.fromDate));
-    return applicable.length?Number(applicable[0].rate):Number(bike.rate)||DR;
+    return getBikeRateForDate(bike,ds);
   };
-  const rate=Number(bike.rate)||DR; // current rate (also used as default)
+  const rate=getBikeCurrentRate(bike); // current rate (also used as default)
   const today=tod();
   const ledger={}; // date string -> {status:'paid'|'partial'|'unpaid'|'pyp'|'grace'|'future', amount:0, payId}
 
