@@ -1639,6 +1639,10 @@ let pendingRecB64=null, pendingExpRecB64=null;
 // ═══════════════════════════════════════
 // ── Firebase state ──
 let fbApp=null, fbDB=null, fbUnsub=null;
+const LOCAL_KEY='byny_v4';
+const PENDING_KEY='byny_pending_v4';
+const CLIENT_KEY='byny_client_id';
+let CLIENT_ID='';
 const FB_SCRIPTS=[
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
@@ -1646,27 +1650,70 @@ const FB_SCRIPTS=[
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js'
 ];
 
+function getClientId(){
+  try{
+    let id=localStorage.getItem(CLIENT_KEY);
+    if(!id){
+      id='web_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
+      localStorage.setItem(CLIENT_KEY,id);
+    }
+    return id;
+  }catch(e){
+    return 'web_'+Date.now().toString(36);
+  }
+}
+
+function normalizeDB(data){
+  const parsed=data||{};
+  return{
+    bikes:[],payments:[],expenses:[],graceDays:[],
+    retiros:[],renterHistory:[],contracts:[],drivers:[],appointments:[],
+    pendingApprovals:[],
+    settings:{rate:DR,name:'Byny Rental'},
+    ...parsed,
+    fbConfig:FIREBASE_CFG,
+    renterHistory:parsed.renterHistory||[],
+    contracts:parsed.contracts||[],
+    drivers:parsed.drivers||[],
+    appointments:parsed.appointments||[],
+    pendingApprovals:parsed.pendingApprovals||[]
+  };
+}
+
+function cloneForStorage(data){
+  const copy={...data};
+  delete copy.fbConfig;
+  return copy;
+}
+
+function getUpdatedAt(data){
+  return Number(data?._meta?.updatedAt||0);
+}
+
+function readStored(key){
+  try{
+    const raw=localStorage.getItem(key);
+    return raw?JSON.parse(raw):null;
+  }catch(e){
+    return null;
+  }
+}
+
+function writeStored(key,data){
+  try{localStorage.setItem(key,JSON.stringify(cloneForStorage(data)));}catch(e){}
+}
+
 // ── Load / Save ──
 function load(){
+  CLIENT_ID=getClientId();
   // Always use hardcoded config
   DB.fbConfig=FIREBASE_CFG;
-  // Load local data first — render immediately so UI isn't blank
+  // Load local data first — prefer pending Firebase saves so reloads do not lose recent work.
   try{
-    const s=localStorage.getItem('byny_v4');
-    if(s){
-      const parsed=JSON.parse(s);
-      DB={
-        bikes:[],payments:[],expenses:[],graceDays:[],
-        retiros:[],renterHistory:[],contracts:[],drivers:[],appointments:[],
-        settings:{rate:DR,name:'Byny Rental'},
-        ...parsed,
-        fbConfig:FIREBASE_CFG,
-        renterHistory:parsed.renterHistory||[],
-        contracts:parsed.contracts||[],
-        drivers:parsed.drivers||[],
-        appointments:parsed.appointments||[]
-      };
-    }
+    const local=readStored(LOCAL_KEY);
+    const pending=readStored(PENDING_KEY);
+    const source=pending&&getUpdatedAt(pending)>=getUpdatedAt(local)?pending:local;
+    if(source)DB=normalizeDB(source);
   }catch(e){}
   // Connect Firebase in background — UI already rendered from local data
   initFirebase(FIREBASE_CFG);
@@ -1676,14 +1723,13 @@ function save(){
   if(DB.fbConfig){
     try{localStorage.setItem('byny_fbconfig',JSON.stringify(DB.fbConfig));}catch(e){}
   }
-  try{
-    const toSave={...DB};delete toSave.fbConfig;
-    localStorage.setItem('byny_v4',JSON.stringify(toSave));
-  }catch(e){}
+  DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId()};
+  writeStored(LOCAL_KEY,DB);
+  writeStored(PENDING_KEY,DB);
   // Render immediately so UI updates without waiting for Firebase round trip
   render();
   if(fbDB){
-    const toSync={...DB};delete toSync.fbConfig;
+    const toSync=cloneForStorage(DB);
     log('Saving to Firebase... expenses='+toSync.expenses.length);
     fbDB.collection('byny').doc('data').set(toSync)
       .then(()=>log('Save OK'))
@@ -1767,6 +1813,26 @@ function subscribeFirestore(){
       const savedCfg=DB.fbConfig;
       if(snap&&snap.exists){
         const remote=snap.data();
+        const pending=readStored(PENDING_KEY);
+        const remoteUpdated=getUpdatedAt(remote);
+        const pendingUpdated=getUpdatedAt(pending);
+        if(pending&&pendingUpdated>remoteUpdated){
+          log('Remote snapshot older than pending local save — keeping local and retrying upload');
+          DB=normalizeDB(pending);
+          writeStored(LOCAL_KEY,DB);
+          render();
+          const retrySync=cloneForStorage(DB);
+          fbDB.collection('byny').doc('data').set(retrySync)
+            .then(()=>log('Pending retry upload OK'))
+            .catch(e=>{
+              log('Pending retry upload ERROR: '+e.code+' — '+e.message);
+              setStatus('error','Pendiente de sincronizar');
+            });
+          return;
+        }
+        if(pending&&remoteUpdated>=pendingUpdated){
+          try{localStorage.removeItem(PENDING_KEY);}catch(e){}
+        }
         // Remote is the source of truth — always use it as the base.
         // Only add local-only items as a safety net for items written
         // in the last minute that haven't synced yet (same-device lag).
@@ -1811,14 +1877,18 @@ function subscribeFirestore(){
           appointments:mergeArray(remote.appointments,DB.appointments),
           renterHistory:remote.renterHistory||DB.renterHistory||[],
           contracts:remote.contracts||DB.contracts||[],
+          _meta:remote._meta||DB._meta||{},
           fbConfig:savedCfg,
         };
-        try{const ts2={...DB};delete ts2.fbConfig;localStorage.setItem('byny_v4',JSON.stringify(ts2));}catch(e){}
+        writeStored(LOCAL_KEY,DB);
         render();
       }else if(DB.bikes&&DB.bikes.length>0){
         // Only upload local data if we actually have something — never overwrite Firebase with empty state
         log('No remote data — uploading local');
-        const ts={...DB};delete ts.fbConfig;
+        DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId()};
+        writeStored(LOCAL_KEY,DB);
+        writeStored(PENDING_KEY,DB);
+        const ts=cloneForStorage(DB);
         fbDB.collection('byny').doc('data').set(ts)
           .then(()=>log('Upload done'))
           .catch(e=>log('Upload error: '+e.message));
@@ -3160,7 +3230,10 @@ function saveFBConfig(){
     initFirebase(cfg).then(()=>{
       // After connection, push local data up
       if(fbDB){
-        const toSync={...DB};delete toSync.fbConfig;
+        DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId()};
+        writeStored(LOCAL_KEY,DB);
+        writeStored(PENDING_KEY,DB);
+        const toSync=cloneForStorage(DB);
         fbDB.collection('byny').doc('data').set(toSync)
           .then(()=>alert('Firebase conectado y datos sincronizados. Ahora cualquier dispositivo que abra la app verá la misma información.'))
           .catch(e=>alert('Conectado pero error al subir datos: '+e.message));
@@ -3206,11 +3279,12 @@ function exportData(){
 function importData(e){
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=ev=>{try{DB=JSON.parse(ev.target.result);save();render();alert('Importado correctamente.');}catch{alert('Archivo inválido.');}};
+  r.onload=ev=>{try{DB=normalizeDB(JSON.parse(ev.target.result));save();render();alert('Importado correctamente.');}catch{alert('Archivo inválido.');}};
   r.readAsText(f);
 }
 function resetAll(){
   if(confirm('¿Borrar todos los datos del negocio? Esto NO eliminará la conexión con Firebase.')){
+    try{localStorage.removeItem(PENDING_KEY);}catch(e){}
     DB={bikes:[],payments:[],expenses:[],graceDays:[],retiros:[],renterHistory:[],contracts:[],drivers:[],settings:{rate:DR,name:'Byny Rental'},fbConfig:FIREBASE_CFG};
     save();
     render();
