@@ -1960,8 +1960,9 @@ function getBikeRateForDate(bike,ds){
   if(!bike)return Number(DB.settings?.rate)||DR;
   if(bike.rateHistory&&bike.rateHistory.length){
     const applicable=bike.rateHistory
+      .map((r,i)=>({...r,_idx:i}))
       .filter(r=>r.fromDate&&r.fromDate<=ds)
-      .sort((a,b)=>b.fromDate.localeCompare(a.fromDate));
+      .sort((a,b)=>b.fromDate.localeCompare(a.fromDate)||b._idx-a._idx);
     if(applicable.length)return Number(applicable[0].rate)||Number(bike.rate)||Number(DB.settings?.rate)||DR;
   }
   return Number(bike.rate)||Number(DB.settings?.rate)||DR;
@@ -1969,6 +1970,15 @@ function getBikeRateForDate(bike,ds){
 
 function getBikeCurrentRate(bike){
   return getBikeRateForDate(bike,tod());
+}
+
+function compactBikeRateHistory(bike){
+  if(!bike||!Array.isArray(bike.rateHistory))return;
+  const byDate=new Map();
+  bike.rateHistory.forEach(r=>{
+    if(r&&r.fromDate)byDate.set(r.fromDate,{rate:Number(r.rate)||Number(bike.rate)||Number(DB.settings?.rate)||DR,fromDate:r.fromDate});
+  });
+  bike.rateHistory=[...byDate.values()].sort((a,b)=>a.fromDate.localeCompare(b.fromDate));
 }
 
 function getRentalPayments(){
@@ -2067,9 +2077,16 @@ function calcBikeBalance(bike){
       if(pd!==null&&isPYP(ds,pd))pypCount++;
       else if((DB.graceDays||[]).find(g=>g.bikeId===bike.id&&g.date===ds))graceCount++;
     }
-    const billable=Math.max(0,totalDays-pypCount-graceCount);
+    let expected=0;
+    for(let i=0;i<totalDays;i++){
+      const d=new Date(bike.startDate+'T12:00:00');d.setDate(d.getDate()+i);
+      const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if(pd!==null&&isPYP(ds,pd))continue;
+      if((DB.graceDays||[]).find(g=>g.bikeId===bike.id&&g.date===ds))continue;
+      expected+=getBikeRateForDate(bike,ds);
+    }
     const paid=DB.payments.filter(p=>p.bikeId===bike.id&&p.payType!=='purchase').reduce((s,p)=>s+Number(p.amount),0);
-    return Math.max(0,billable*rate-paid);
+    return Math.max(0,expected-paid);
   }
 }
 function calcBikeStatus(bike){
@@ -3026,7 +3043,10 @@ function previewDocPhoto(input,txtId,prevId){
 function renderRateHistory(bike){
   const el=document.getElementById('rate-history-display');if(!el)return;
   if(!bike||!bike.rateHistory||bike.rateHistory.length<=1){el.innerHTML='';return;}
-  const sorted=[...bike.rateHistory].sort((a,b)=>b.fromDate.localeCompare(a.fromDate));
+  const byDate=new Map();
+  bike.rateHistory.forEach((r,i)=>{if(r&&r.fromDate)byDate.set(r.fromDate,{...r,_idx:i});});
+  const sorted=[...byDate.values()].sort((a,b)=>b.fromDate.localeCompare(a.fromDate)||b._idx-a._idx);
+  if(!sorted.length){el.innerHTML='';return;}
   el.innerHTML=`<div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;margin-top:4px">Historial de tarifas</div>`+
     sorted.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:${i===0?'var(--sky-bg)':'var(--surface2)'};border-radius:5px;margin-bottom:2px;font-size:12px">
       <span style="font-weight:600;color:${i===0?'var(--sky)':'var(--ink2)'}">
@@ -3041,7 +3061,7 @@ function checkRateChange(input){
   const bike=DB.bikes.find(b=>b.id===bikeId);
   if(!bike)return;
   const newRate=parseInt(input.value)||0;
-  const oldRate=Number(bike.rate)||DR;
+  const oldRate=getBikeCurrentRate(bike);
   const row=document.getElementById('rate-change-row');
   if(row){
     row.style.display=(newRate&&newRate!==oldRate)?'block':'none';
@@ -3058,7 +3078,7 @@ function openEditBike(id){
   document.getElementById('edit-bk-name').value=b.name||'';
   document.getElementById('edit-bk-renter').value=b.renter||'';
   document.getElementById('edit-bk-start').value=b.startDate||'';
-  document.getElementById('edit-bk-rate').value=b.rate||DB.settings?.rate||DR;
+  document.getElementById('edit-bk-rate').value=getBikeCurrentRate(b);
   document.getElementById('edit-bk-phone').value=b.phone||'';
   document.getElementById('edit-bk-plate').value=b.plateDigit!==undefined?b.plateDigit:'';
   document.getElementById('edit-bk-soat').value=b.soatDate||'';
@@ -3094,7 +3114,7 @@ function saveEditBike(){
   if(!name){alert('El nombre no puede estar vacío');return;}
 
   // Capture old rate BEFORE any changes
-  const oldRate=Number(bike.rate)||DR;
+  const oldRate=getBikeCurrentRate(bike);
   const newRate=parseInt(document.getElementById('edit-bk-rate').value)||DR;
 
   bike.name=name;
@@ -3125,10 +3145,12 @@ function saveEditBike(){
     if(!bike.rateHistory.length){
       bike.rateHistory.push({rate:oldRate,fromDate:bike.startDate||'2020-01-01'});
     }
+    bike.rateHistory=bike.rateHistory.filter(r=>r.fromDate!==fromDate);
     bike.rateHistory.push({rate:newRate,fromDate});
     log('Rate changed: '+oldRate+' → '+newRate+' from '+fromDate);
   }
   bike.rate=newRate;
+  compactBikeRateHistory(bike);
 
   save();closeM('edit-bike-modal');showSaved('Moto actualizada');render();
 }
