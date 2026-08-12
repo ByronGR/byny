@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v2.4 -->
+<!-- Byny Rental v2.5 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -586,7 +586,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="brand">
     <span class="brand-name">Byny Rental</span>
     <span class="brand-sub">Medellín</span>
-    <span style="font-size:9px;color:var(--ink4);margin-left:4px;font-family:'JetBrains Mono',monospace">v2.4</span>
+    <span style="font-size:9px;color:var(--ink4);margin-left:4px;font-family:'JetBrains Mono',monospace">v2.5</span>
   </div>
   <div class="topbar-right">
     <span class="date-chip" id="hdr-date"></span>
@@ -797,6 +797,24 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
     <div class="frow"><label>Tarifa diaria por defecto (COP)</label><input type="number" id="set-rate" value="35000" step="1000"></div>
     <div class="frow"><label>Nombre del negocio</label><input type="text" id="set-biz" value="Byny Rental"></div>
     <button class="btn solid" onclick="saveSettings()">Guardar</button>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="card-title">Pico y placa — Medellín</span></div>
+    <div style="font-size:13px;color:var(--ink3);margin-bottom:1rem;line-height:1.6;font-weight:500">
+      Aplica el <strong>primer dígito</strong> de la placa para motos de 2 y 4 tiempos, de lunes a viernes.
+      La Alcaldía cambia la rotación cada semestre — actualízala aquí y se aplica al cobro de todos los conductores.<br>
+      Escribe los dígitos separados por coma. Deja vacío un día si no hay restricción.
+    </div>
+    <div class="frow"><label>Lunes</label><input type="text" id="pyp-1" placeholder="5,8"></div>
+    <div class="frow"><label>Martes</label><input type="text" id="pyp-2" placeholder="1,4"></div>
+    <div class="frow"><label>Miércoles</label><input type="text" id="pyp-3" placeholder="0,2"></div>
+    <div class="frow"><label>Jueves</label><input type="text" id="pyp-4" placeholder="3,6"></div>
+    <div class="frow"><label>Viernes</label><input type="text" id="pyp-5" placeholder="7,9"></div>
+    <div id="pyp-warn" style="display:none;font-size:12px;font-weight:600;color:var(--fire);margin-bottom:.75rem"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn solid" onclick="savePYP()">Guardar pico y placa</button>
+      <button class="btn" onclick="resetPYP()">Volver a la rotación de agosto 2026</button>
+    </div>
   </div>
   <div class="card">
     <div class="card-head"><span class="card-title">Respaldo de datos</span></div>
@@ -1609,14 +1627,33 @@ const RETIRO_TYPES={
   otro:{label:'Otro'}
 };
 
-// Medellín Pico y Placa 2026 — PRIMER DÍGITO de la placa, motos 2 y 4 tiempos
-// Lunes=1, Martes=2, Miércoles=3, Jueves=4, Viernes=5
-// Lunes: 1,7 | Martes: 0,3 | Miércoles: 4,6 | Jueves: 5,9 | Viernes: 2,8
-const PYP_MED = {
-  0:[2], 1:[1], 2:[5], 3:[2],
-  4:[3], 5:[4], 6:[3], 7:[1],
-  8:[5], 9:[4]
-};
+// Medellín Pico y Placa — motos 2 y 4 tiempos, PRIMER DÍGITO de la placa.
+// La Alcaldía rota los dígitos cada semestre. NO edites esto en el código:
+// cámbialo en Ajustes → Pico y placa y queda guardado para todos los dispositivos.
+// Rotación vigente desde el 3 de agosto de 2026 (Decreto Alcaldía de Medellín):
+// Lunes: 5,8 | Martes: 1,4 | Miércoles: 0,2 | Jueves: 3,6 | Viernes: 7,9
+const PYP_DAYS_DEFAULT = {1:[5,8], 2:[1,4], 3:[0,2], 4:[3,6], 5:[7,9]};
+const PYP_DAY_NAMES = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes'};
+
+// Día → dígitos (como lo publica la Alcaldía). Ajustes puede sobrescribirlo.
+function pypDays(){
+  const custom=DB&&DB.settings&&DB.settings.pypDays;
+  if(!custom)return PYP_DAYS_DEFAULT;
+  const out={};
+  for(let d=1;d<=5;d++){
+    const v=custom[d];
+    out[d]=Array.isArray(v)?v.map(n=>parseInt(n)).filter(n=>n>=0&&n<=9):(PYP_DAYS_DEFAULT[d]||[]);
+  }
+  return out;
+}
+
+// Dígito → días restringidos. Derivado de pypDays() — una sola fuente de verdad.
+function pypMap(){
+  const byDay=pypDays();
+  const out={0:[],1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[],9:[]};
+  for(let d=1;d<=5;d++)(byDay[d]||[]).forEach(dig=>{if(out[dig])out[dig].push(d);else out[dig]=[d];});
+  return out;
+}
 
 const CO_TZ='America/Bogota';
 const CO_DATE_FMT=new Intl.DateTimeFormat('en-CA',{timeZone:CO_TZ,year:'numeric',month:'2-digit',day:'2-digit'});
@@ -1642,6 +1679,11 @@ let pendingRecB64=null, pendingExpRecB64=null;
 // ═══════════════════════════════════════
 // ── Firebase state ──
 let fbApp=null, fbDB=null, fbUnsub=null;
+// true en cuanto Firestore nos ha respondido al menos una vez en esta sesión.
+// Hasta entonces este dispositivo NO sabe qué hay en el servidor y tiene
+// PROHIBIDO subir nada: así un teléfono nuevo (o con los datos borrados) no
+// puede pisar la información real de los demás.
+let hasSyncedOnce=false;
 const LOCAL_KEY='byny_v4';
 const PENDING_KEY='byny_pending_v4';
 const CLIENT_KEY='byny_client_id';
@@ -1726,12 +1768,15 @@ function save(){
   if(DB.fbConfig){
     try{localStorage.setItem('byny_fbconfig',JSON.stringify(DB.fbConfig));}catch(e){}
   }
-  DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId()};
+  // fromSyncedSession marca si este cambio se hizo SOBRE los datos del servidor.
+  // Sólo esos cambios pueden reintentar subirse; los de un dispositivo que
+  // nunca sincronizó se quedan en local y jamás pisan el servidor.
+  DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId(),fromSyncedSession:hasSyncedOnce};
   writeStored(LOCAL_KEY,DB);
   writeStored(PENDING_KEY,DB);
   // Render immediately so UI updates without waiting for Firebase round trip
   render();
-  if(fbDB){
+  if(fbDB&&hasSyncedOnce){
     const toSync=cloneForStorage(DB);
     log('Saving to Firebase... expenses='+toSync.expenses.length);
     fbDB.collection('byny').doc('data').set(toSync)
@@ -1740,6 +1785,9 @@ function save(){
         log('Save ERROR: '+e.code+' — '+e.message);
         setStatus('error','Error al guardar: '+e.code);
       });
+  }else if(fbDB&&!hasSyncedOnce){
+    log('Save held back — aún no hemos leído el servidor. Se guardó solo en este dispositivo.');
+    setStatus('connecting','Guardado local — esperando servidor');
   }else{
     log('save() called but fbDB is null — no Firebase sync');
   }
@@ -1814,12 +1862,23 @@ function subscribeFirestore(){
     snap=>{
       log('Snapshot received. exists='+snap.exists);
       const savedCfg=DB.fbConfig;
+      // Ya sabemos qué hay en el servidor: a partir de aquí este dispositivo
+      // sí puede subir cambios.
+      const firstSnapshot=!hasSyncedOnce;
+      hasSyncedOnce=true;
       if(snap&&snap.exists){
         const remote=snap.data();
         const pending=readStored(PENDING_KEY);
         const remoteUpdated=getUpdatedAt(remote);
         const pendingUpdated=getUpdatedAt(pending);
-        if(pending&&pendingUpdated>remoteUpdated){
+        // Un "pending" sólo puede pisar el servidor si se escribió ENCIMA de
+        // datos del servidor (fromSyncedSession). Un pending nacido en un
+        // dispositivo que nunca sincronizó se descarta: era la causa de que
+        // un teléfono nuevo borrara la información real de todos.
+        if(pending&&pendingUpdated>remoteUpdated&&!(pending._meta&&pending._meta.fromSyncedSession)){
+          log('Pending local descartado — se creó sin haber leído el servidor. Se conserva lo del servidor.');
+          try{localStorage.removeItem(PENDING_KEY);}catch(e){}
+        }else if(pending&&pendingUpdated>remoteUpdated){
           log('Remote snapshot older than pending local save — keeping local and retrying upload');
           DB=normalizeDB(pending);
           writeStored(LOCAL_KEY,DB);
@@ -1835,6 +1894,21 @@ function subscribeFirestore(){
         }
         if(pending&&remoteUpdated>=pendingUpdated){
           try{localStorage.removeItem(PENDING_KEY);}catch(e){}
+        }
+        // RED DE SEGURIDAD: si lo que llega del servidor tiene MENOS registros
+        // que lo que hay en este dispositivo, antes se sobrescribía en silencio.
+        // Ahora guardamos una copia intacta y avisamos, para no perder nada nunca más.
+        if(firstSnapshot){
+          const localCount=(DB.bikes||[]).length+(DB.payments||[]).length+(DB.expenses||[]).length;
+          const remoteCount=(remote.bikes||[]).length+(remote.payments||[]).length+(remote.expenses||[]).length;
+          if(localCount>remoteCount){
+            const key='byny_rescate_'+Date.now();
+            try{
+              localStorage.setItem(key,JSON.stringify(cloneForStorage(DB)));
+              log('AVISO: el servidor traía menos datos que este dispositivo. Copia de rescate guardada en '+key);
+              setTimeout(()=>alert('Atención: los datos del servidor tienen menos registros que los de este dispositivo.\n\nNo se borró nada: se guardó una copia de seguridad en este teléfono.\nAvísale a Byron antes de seguir usando la app.'),300);
+            }catch(e){log('No se pudo guardar copia de rescate: '+e.message);}
+          }
         }
         // Remote is the source of truth — always use it as the base.
         // Only add local-only items as a safety net for items written
@@ -1942,8 +2016,11 @@ function showSaved(msg='Cambios guardados'){
 function fmt(n){return new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);}
 function fmtK(n){return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?'$'+(n/1000).toFixed(0)+'k':'$'+n;}
 function pypDayName(plateDigit){
-  const map={'0':'Lunes','1':'Lunes','2':'Martes','3':'Miércoles','4':'Jueves','5':'Jueves','6':'Viernes','7':'Sábado','8':'Viernes','9':'Miércoles'};
-  return plateDigit!==null&&plateDigit!==''&&plateDigit!==undefined?'P&P: '+map[String(plateDigit)]:'';
+  if(plateDigit===null||plateDigit===''||plateDigit===undefined)return '';
+  // Mismo origen que el cobro (pypMap) — lo que se muestra es lo que se factura.
+  const days=pypMap()[parseInt(plateDigit)]||[];
+  if(!days.length)return 'P&P: sin restricción';
+  return 'P&P: '+days.map(d=>PYP_DAY_NAMES[d]).join(' y ');
 }
 function fmtD(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});}
 function dateKey(d=new Date()){
@@ -2044,7 +2121,7 @@ function isPYP(dateStr, plateDigit){
   const d=new Date(dateStr+'T12:00:00');
   const dow=d.getDay(); // 0=sun,1=mon,2=tue,3=wed,4=thu,5=fri,6=sat
   if(dow===0||dow===6)return false;
-  const restricted=PYP_MED[parseInt(plateDigit)]||[];
+  const restricted=pypMap()[parseInt(plateDigit)]||[];
   return restricted.includes(dow);
 }
 
@@ -3307,8 +3384,53 @@ function testFirebase(){
 }
 
 function saveSettings(){
-  DB.settings={rate:parseInt(document.getElementById('set-rate').value)||DR,name:document.getElementById('set-biz').value||'Byny Rental'};
+  // Conserva el resto de ajustes (p. ej. pypDays) en vez de reemplazarlos.
+  DB.settings={...(DB.settings||{}),rate:parseInt(document.getElementById('set-rate').value)||DR,name:document.getElementById('set-biz').value||'Byny Rental'};
   save();showSaved('Ajustes guardados');
+}
+
+// ── Pico y placa editable ──
+function renderSettings(){
+  const rate=document.getElementById('set-rate');
+  const biz=document.getElementById('set-biz');
+  if(rate)rate.value=(DB.settings&&DB.settings.rate)||DR;
+  if(biz)biz.value=(DB.settings&&DB.settings.name)||'Byny Rental';
+  const byDay=pypDays();
+  for(let d=1;d<=5;d++){
+    const el=document.getElementById('pyp-'+d);
+    if(el&&document.activeElement!==el)el.value=(byDay[d]||[]).join(',');
+  }
+}
+
+function savePYP(){
+  const byDay={};
+  const seen={};
+  let dup=null;
+  for(let d=1;d<=5;d++){
+    const raw=(document.getElementById('pyp-'+d).value||'').trim();
+    const digits=raw===''?[]:raw.split(/[^0-9]+/).filter(s=>s!=='').map(s=>parseInt(s));
+    if(digits.some(n=>isNaN(n)||n<0||n>9)){
+      showPYPWarn('Sólo dígitos del 0 al 9, separados por coma.');return;
+    }
+    digits.forEach(n=>{if(seen[n]!==undefined)dup=n;seen[n]=d;});
+    byDay[d]=[...new Set(digits)];
+  }
+  if(dup!==null){showPYPWarn('El dígito '+dup+' está en dos días distintos. Revisa la tabla.');return;}
+  showPYPWarn('');
+  DB.settings={...(DB.settings||{}),pypDays:byDay};
+  save();showSaved('Pico y placa actualizado');
+}
+
+function resetPYP(){
+  DB.settings={...(DB.settings||{}),pypDays:{...PYP_DAYS_DEFAULT}};
+  save();showPYPWarn('');showSaved('Pico y placa restaurado');
+}
+
+function showPYPWarn(msg){
+  const el=document.getElementById('pyp-warn');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.display=msg?'block':'none';
 }
 function saveFBConfig(){
   try{
@@ -3406,6 +3528,7 @@ function render(){
   renderFinance();
   renderPieChart();
   renderRetiros();
+  renderSettings();
 }
 
 // ── KPIs ──
@@ -6121,117 +6244,6 @@ document.getElementById('hdr-date').textContent=todayCODate().toLocaleDateString
 
 load();
 
-// ── DEMO DATA (only if no existing data) ──
-if(!DB.bikes.length){
-  DB.bikes=[
-    {
-      id:'b1',name:'AKT NKD 125 — OXY123',renter:'Carlos Mendoza',
-      startDate:'2026-02-01',rate:35000,
-      phone:'573001234567',plateDigit:'5',soatDate:'2025-11-15',tecnicaDate:'2025-08-20',
-      km:'14200',kmpd:'75',
-      oilInterval:'2500',oilLast:'13000',
-      maintSchedule:[
-        {km:5000, checks:'Aceite y filtro · Cadena y piñones · Presión llantas · Nivel frenos', done:true, doneDate:'2025-08-10', doneExpId:null},
-        {km:10000,checks:'Aceite y filtro · Bujía NGK D8EA · Cadena, piñones y corona · Frenos · Sistema eléctrico · Ajuste carburador', done:true, doneDate:'2025-11-20', doneExpId:null},
-        {km:15000,checks:'Aceite y filtro · Cadena y piñones · Presión llantas · Nivel frenos', done:false, doneDate:null, doneExpId:null},
-        {km:20000,checks:'Todo lo de 10.000 km · Llantas (evaluar cambio) · Pastillas de freno · Cable acelerador · Filtro de aire', done:false, doneDate:null, doneExpId:null}
-      ]
-    },
-    {
-      id:'b2',name:'AKT NKD 125 — TKR456',renter:'Pedro Ramírez',
-      startDate:'2026-02-10',rate:35000,
-      phone:'573109876543',plateDigit:'8',soatDate:'2026-01-10',tecnicaDate:'2025-12-05',
-      km:'9800',kmpd:'60',
-      oilInterval:'2500',oilLast:'8500',
-      maintSchedule:[
-        {km:5000, checks:'Aceite y filtro · Cadena y piñones · Presión llantas · Nivel frenos', done:true, doneDate:'2025-10-05', doneExpId:null},
-        {km:10000,checks:'Aceite y filtro · Bujía NGK D8EA · Cadena, piñones y corona · Frenos · Sistema eléctrico · Ajuste carburador', done:false, doneDate:null, doneExpId:null},
-        {km:15000,checks:'Aceite y filtro · Cadena y piñones · Presión llantas · Nivel frenos', done:false, doneDate:null, doneExpId:null},
-        {km:20000,checks:'Todo lo de 10.000 km · Llantas (evaluar cambio) · Pastillas de freno · Cable acelerador · Filtro de aire', done:false, doneDate:null, doneExpId:null}
-      ]
-    },
-    {
-      id:'b3',name:'AKT NKD 125 — MNP789',renter:'',
-      startDate:'',rate:35000,
-      phone:'',plateDigit:'5',
-      km:'6500',kmpd:'50',
-      oilInterval:'2000',oilLast:'5800',
-      maintSchedule:[
-        {km:5000, checks:'Aceite y filtro · Cadena y piñones · Presión llantas · Nivel frenos', done:true, doneDate:'2025-12-01', doneExpId:null},
-        {km:10000,checks:'Aceite y filtro · Bujía NGK D8EA · Cadena, piñones y corona · Frenos · Sistema eléctrico · Ajuste carburador', done:false, doneDate:null, doneExpId:null},
-        {km:15000,checks:'Aceite y filtro · Cadena y piñones · Presión llantas · Nivel frenos', done:false, doneDate:null, doneExpId:null},
-        {km:20000,checks:'Todo lo de 10.000 km · Llantas (evaluar cambio) · Pastillas de freno · Cable acelerador · Filtro de aire', done:false, doneDate:null, doneExpId:null}
-      ]
-    }
-  ];
-
-  // Payments — Feb & March for b1 and b2
-  DB.payments=[
-    // Carlos — Feb
-    {id:'p1',bikeId:'b1',amount:245000,date:'2026-02-07',method:'Bancolombia',notes:'Primera semana feb',receipt:null},
-    {id:'p2',bikeId:'b1',amount:245000,date:'2026-02-14',method:'Bancolombia',notes:'Segunda semana feb',receipt:null},
-    {id:'p3',bikeId:'b1',amount:245000,date:'2026-02-21',method:'Efectivo',notes:'Tercera semana feb',receipt:null},
-    // Pedro — Feb (started Feb 10, a bit behind)
-    {id:'p4',bikeId:'b2',amount:175000,date:'2026-02-17',method:'Bancolombia',notes:'Primera semana',receipt:null},
-    {id:'p5',bikeId:'b2',amount:105000,date:'2026-02-24',method:'Efectivo',notes:'',receipt:null},
-    // Carlos — March
-    {id:'p6',bikeId:'b1',amount:245000,date:'2026-03-01',method:'Bancolombia',notes:'',receipt:null},
-    {id:'p7',bikeId:'b1',amount:245000,date:'2026-03-08',method:'Bancolombia',notes:'Semana del 8',receipt:null},
-    {id:'p8',bikeId:'b1',amount:245000,date:'2026-03-15',method:'Bancolombia',notes:'',receipt:null},
-    // Pedro — March (behind on payments)
-    {id:'p9',bikeId:'b2',amount:210000,date:'2026-03-05',method:'Bancolombia',notes:'',receipt:null},
-    {id:'p10',bikeId:'b2',amount:140000,date:'2026-03-12',method:'Efectivo',notes:'Abono parcial',receipt:null},
-  ];
-
-  // Grace days — garage day, regalo, etc.
-  DB.graceDays=[
-    {id:'g1',bikeId:'b1',date:'2026-03-05',reason:'taller',note:'Cambio de llantas'},
-    {id:'g2',bikeId:'b2',date:'2026-03-10',reason:'averia',note:'Problema con frenos'},
-    {id:'g3',bikeId:'b2',date:'2026-02-20',reason:'regalo',note:'Día regalado por buen comportamiento'},
-  ];
-
-  // Expenses — Feb & March
-  DB.expenses=[
-    {id:'e1',bikeId:'',cat:'documentacion',desc:'SOAT — 3 motos',amount:450000,date:'2026-02-03',receipt:null},
-    {id:'e2',bikeId:'b1',cat:'mantenimiento',desc:'Cambio de aceite AKT',amount:45000,date:'2026-02-10',receipt:null},
-    {id:'e3',bikeId:'b2',cat:'reparacion',desc:'Reparación frenos Honda',amount:85000,date:'2026-02-18',receipt:null},
-    {id:'e4',bikeId:'b3',cat:'mantenimiento',desc:'Cambio aceite Yamaha',amount:42000,date:'2026-02-22',receipt:null},
-    {id:'e5',bikeId:'b1',cat:'mantenimiento',desc:'Cambio llantas AKT',amount:120000,date:'2026-03-05',receipt:null},
-    {id:'e6',bikeId:'b2',cat:'reparacion',desc:'Revisión frenos Honda',amount:60000,date:'2026-03-10',receipt:null},
-    {id:'e7',bikeId:'',cat:'misc',desc:'Herramientas taller',amount:35000,date:'2026-03-02',receipt:null},
-    {id:'e8',bikeId:'b1',cat:'mantenimiento',desc:'Filtro de aire AKT',amount:28000,date:'2026-03-14',receipt:null},
-  ];
-
-  DB.retiros=[
-    {id:'r1',date:'2026-01-31',type:'apartamento',amount:800000,note:'Arriendo enero'},
-    {id:'r2',date:'2026-02-05',type:'ahorro',amount:150000,note:'Ahorro mes'},
-    {id:'r3',date:'2026-02-28',type:'apartamento',amount:800000,note:'Arriendo feb'},
-    {id:'r4',date:'2026-03-05',type:'ahorro',amount:200000,note:''},
-    {id:'r5',date:'2026-03-28',type:'apartamento',amount:800000,note:'Arriendo marzo'},
-    {id:'r6',date:'2026-03-15',type:'moto',amount:500000,note:'Cuota moto nueva'},
-  ];
-  // Extra months for finanzas history
-  DB.payments=DB.payments.concat([
-    {id:'p11',bikeId:'b1',amount:700000,date:'2026-01-07',method:'Bancolombia',notes:'Enero semana 1',receipt:null},
-    {id:'p12',bikeId:'b1',amount:700000,date:'2026-01-14',method:'Bancolombia',notes:'Enero semana 2',receipt:null},
-    {id:'p13',bikeId:'b1',amount:350000,date:'2026-01-21',method:'Efectivo',notes:'',receipt:null},
-    {id:'p14',bikeId:'b2',amount:560000,date:'2026-01-10',method:'Bancolombia',notes:'',receipt:null},
-    {id:'p15',bikeId:'b2',amount:280000,date:'2026-01-20',method:'Efectivo',notes:'',receipt:null},
-    {id:'p16',bikeId:'b1',amount:910000,date:'2025-12-05',method:'Bancolombia',notes:'Dic semana 1-2',receipt:null},
-    {id:'p17',bikeId:'b2',amount:630000,date:'2025-12-10',method:'Bancolombia',notes:'',receipt:null},
-    {id:'p18',bikeId:'b1',amount:455000,date:'2025-11-08',method:'Bancolombia',notes:'',receipt:null},
-    {id:'p19',bikeId:'b2',amount:315000,date:'2025-11-15',method:'Efectivo',notes:'',receipt:null},
-  ]);
-  DB.expenses=DB.expenses.concat([
-    {id:'e9',bikeId:'b1',cat:'mantenimiento',desc:'Cambio aceite AKT',amount:45000,date:'2026-01-12',receipt:null},
-    {id:'e10',bikeId:'',cat:'documentacion',desc:'SOAT renovación',amount:160000,date:'2026-01-05',receipt:null},
-    {id:'e11',bikeId:'b2',cat:'reparacion',desc:'Cambio cadena Honda',amount:75000,date:'2025-12-08',receipt:null},
-    {id:'e12',bikeId:'',cat:'misc',desc:'Herramientas',amount:40000,date:'2025-12-15',receipt:null},
-    {id:'e13',bikeId:'b1',cat:'mantenimiento',desc:'Cambio bujía',amount:18000,date:'2025-11-10',receipt:null},
-  ]);
-  DB.settings={rate:35000,name:'Byny Rental'};
-  save();
-}
 
 // Restore last active tab on load
 try{
