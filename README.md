@@ -74,7 +74,8 @@ keep images out of the document.
 
 - **Drivers are matched to bikes by first-name substring** (`b.renter.includes(fname)`).
   Two drivers sharing a first name, or a name contained in another, resolve to the wrong bike.
-- **The Bancolombia account number is hardcoded in `index.html`** and this repository is
-  public. Consider making the repo private.
+- The repository is public. Nothing sensitive is in it any more (the Bancolombia account
+  number and payment QR left with the driver portal in v3.0), but private is still the
+  safer default.
 - Any authenticated user has full read/write on all business data, including personal
   cédulas and the owner's retiros.
