@@ -23,6 +23,8 @@ service cloud.firestore {
     match /payments/{paymentId}      { allow read, write: if autenticado(); }
     match /expenses/{expenseId}      { allow read, write: if autenticado(); }
     match /retiros/{retiroId}        { allow read, write: if autenticado(); }
+    // Arreglos que pagó el conductor: bajan la deuda, no tocan la caja.
+    match /ajustes/{ajusteId}        { allow read, write: if autenticado(); }
     match /graceDays/{graceId}       { allow read, write: if autenticado(); }
     match /contracts/{contractId}    { allow read, write: if autenticado(); }
     match /appointments/{apptId}     { allow read, write: if autenticado(); }

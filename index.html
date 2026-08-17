@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.9 -->
+<!-- Byny Rental v6.0 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -288,6 +288,47 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 .md-btn.ghost:hover{background:var(--surface2);color:var(--ink)}
 .md-bar{height:8px;background:var(--track);border-radius:999px;overflow:hidden}
 .md-bar>span{display:block;height:100%;border-radius:999px;transition:width 600ms var(--ease)}
+
+/* ═══ HOJA "+ AGREGAR" ═══ */
+.sheet-scrim{position:fixed;inset:0;background:rgba(20,24,29,.42);z-index:200;display:none;
+  align-items:center;justify-content:center;padding:20px}
+.sheet-scrim.on{display:flex}
+.sheet{background:var(--surface);border-radius:16px;max-width:560px;width:100%;max-height:88vh;
+  overflow-y:auto;box-shadow:0 24px 64px rgba(20,24,29,.28)}
+.sheet-head{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--line2);
+  position:sticky;top:0;background:var(--surface);z-index:2}
+.sheet-back{background:none;border:none;font-size:16px;color:var(--ink2);cursor:pointer;font-family:inherit;padding:0 4px}
+.sheet-back:hover{color:var(--ink)}
+.sheet-title{font-size:15px;font-weight:600;flex:1}
+.sheet-x{background:none;border:none;font-size:20px;color:var(--ink3);cursor:pointer;font-family:inherit;line-height:1}
+.sheet-body{padding:18px 20px 22px}
+.sheet-opt{display:flex;align-items:flex-start;gap:11px;width:100%;padding:13px 14px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;text-align:left;
+  margin-bottom:8px;transition:border-color 150ms,background 150ms}
+.sheet-opt:hover{border-color:var(--ink);background:var(--surface2)}
+.sheet-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.sheet-opt-l{font-size:13.5px;font-weight:600;color:var(--ink)}
+.sheet-opt-s{font-size:11.5px;color:var(--ink2);margin-top:2px;line-height:1.4}
+.sheet-f{margin-bottom:14px}
+.sheet-f>label{display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:5px}
+.sheet-in{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;
+  font-family:inherit;color:var(--ink);background:var(--surface)}
+.sheet-in:focus{outline:none;border-color:var(--leaf)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg-card{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
+  cursor:pointer;font-family:inherit;text-align:left}
+.seg-card.on{border-color:var(--ink);background:var(--surface2)}
+.seg-l{font-size:12.5px;font-weight:600}
+.seg-s{font-size:11px;color:var(--ink2);margin-top:2px}
+.aviso-amber{background:var(--sun-bg);border:1px solid #F4E2BC;color:var(--sun-text);
+  font-size:11.5px;line-height:1.5;padding:10px 12px;border-radius:8px;margin-top:10px}
+.aviso-violet{background:#F5F0FF;border:1px solid #DFD2F7;color:var(--violet-text);
+  font-size:12px;padding:10px 12px;border-radius:8px;margin-bottom:14px}
+.sheet-go{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+  font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px}
+.sheet-go:hover{background:var(--leaf)}
+.item-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;
+  background:var(--surface2);border-radius:8px;margin-bottom:6px;font-size:12.5px}
 
 /* ═══ SECTIONS ═══ */
 .sec{display:none}.sec.on{display:block}
@@ -787,7 +828,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.9</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v6.0</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -810,7 +851,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   </div>
 </header>
 
-<button class="byny-fab" onclick="toggleQuickAdd()" id="quick-add-btn">+ Agregar</button>
+<button class="byny-fab" onclick="abrirSheet()" id="quick-add-btn">+ Agregar</button>
 <div id="quick-add-menu" class="byny-fab-menu" style="display:none">
   <button onclick="openM('pay-modal');closeQuickAdd()">Registrar pago</button>
   <button onclick="openM('exp-modal');closeQuickAdd()">Registrar gasto</button>
@@ -1052,6 +1093,17 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 
 
 <!-- ═══ IMAGE VIEWER ═══ -->
+<div class="sheet-scrim" id="sheet-scrim" onclick="if(event.target===this)cerrarSheet()">
+  <div class="sheet">
+    <div class="sheet-head">
+      <button class="sheet-back" id="sheet-back" onclick="sheetMenu()" style="display:none">←</button>
+      <span class="sheet-title" id="sheet-title">Agregar</span>
+      <button class="sheet-x" onclick="cerrarSheet()">×</button>
+    </div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </div>
+</div>
+
 <div class="viewer" id="viewer" onclick="closeViewer()">
   <button class="viewer-close">×</button>
   <img id="viewer-img" src="" alt="">
@@ -1916,6 +1968,9 @@ let SERVIDOR_SETTINGS=null;
 let PENDIENTES=[];
 let modoLegado=false;          // true si las reglas nuevas aún no están publicadas
 let colsListas=new Set();      // colecciones que ya respondieron al menos una vez
+let colsSinPermiso=new Set();  // colecciones que las reglas publicadas aún no permiten
+// Sin estas la app no puede funcionar; el resto puede faltar sin drama.
+const COLS_CENTRALES=['bikes','drivers','payments','expenses','retiros'];
 let migracionHecha=false;
 
 // Firestore rechaza undefined, NaN e Infinity, y corta a 1 MB por documento.
@@ -2194,8 +2249,20 @@ function suscribirColeccion(col){
     },
     err=>{
       log('Error escuchando '+col+': '+err.code);
-      if(err.code==='permission-denied'&&!modoLegado)activarModoLegado();
-      else setStatus('error','Error de conexión: '+err.code);
+      if(err.code!=='permission-denied'){setStatus('error','Error de conexión: '+err.code);return;}
+      // Sólo se vuelve al documento antiguo si faltan permisos en las colecciones
+      // centrales. Si es una nueva que aún no está en las reglas publicadas, se
+      // sigue trabajando normal y se avisa qué falta — antes, añadir una
+      // colección al código tumbaba toda la app al modo antiguo.
+      if(COLS_CENTRALES.includes(col)){
+        if(!modoLegado)activarModoLegado();
+      }else{
+        colsSinPermiso.add(col);
+        DB[col]=DB[col]||[];
+        colsListas.add(col);
+        avisarColeccionFaltante();
+        if(colsListas.size===COLECCIONES.length){setStatus('connected','Sincronizado');revisarMigracion();}
+      }
     });
   unsubs.push(u);
 }
@@ -2235,6 +2302,19 @@ function activarModoLegado(){
       render();
     },
     err=>{setStatus('error','Error de conexión: '+err.code);});
+}
+
+function avisarColeccionFaltante(){
+  const el=document.getElementById('first-run');
+  if(!el||!colsSinPermiso.size||document.getElementById('aviso-coleccion'))return;
+  el.insertAdjacentHTML('afterbegin',
+    `<div id="aviso-coleccion" class="byny-card" style="border-color:var(--sun-line);background:var(--sun-bg);margin-bottom:16px">
+      <div style="font-size:12.5px;color:var(--sun-text);line-height:1.55">
+        <b>Falta actualizar las reglas de Firebase.</b> La colección
+        <code>${[...colsSinPermiso].join(', ')}</code> todavía no está permitida, así que esos
+        datos no se guardan. Todo lo demás funciona normal.<br>
+        Publica de nuevo <code>firestore.rules</code> en la consola de Firebase y recarga.
+      </div></div>`);
 }
 
 function mostrarAvisoReglas(){
@@ -4898,6 +4978,231 @@ function mdDatosMoto(b){
 function campoMoto(id,campo,valor){
   const b=(DB.bikes||[]).find(x=>x.id===id);if(!b)return;
   b[campo]=valor; save(); showSaved('Guardado');
+}
+
+// ═══════════ HOJA "+ AGREGAR" ═══════════
+let gastoPago='empresa', gastoItems=[];
+
+function abrirSheet(){document.getElementById('sheet-scrim').classList.add('on');sheetMenu();}
+function cerrarSheet(){document.getElementById('sheet-scrim').classList.remove('on');}
+function sheetHead(titulo,atras){
+  document.getElementById('sheet-title').textContent=titulo;
+  document.getElementById('sheet-back').style.display=atras?'block':'none';
+}
+function sheetMenu(){
+  sheetHead('Agregar',false);
+  const ops=[
+    ['#0E9F6E','Pago de arriendo','Abona a la deuda de un conductor',"sheetPago()"],
+    ['#E8452B','Gasto o mantenimiento','Un servicio completo con varios ítems',"sheetGasto()"],
+    ['#7C5CD6','Retiro de dinero','Sacar plata de caja y dejar el motivo',"sheetRetiro()"],
+    ['#5CC8FF','Entregar moto','Asignar una moto libre a un conductor',"sheetEntregar()"],
+    ['#E0AE3A','Nuevo conductor','Crear el perfil antes de entregarle una moto',"cerrarSheet();openNewDriver()"],
+    ['#A98BFF','Moto nueva','Sumarla a la flota',"cerrarSheet();openM('bike-modal')"]
+  ];
+  document.getElementById('sheet-body').innerHTML=ops.map(([c,l,s,fn])=>
+    `<button class="sheet-opt" onclick="${fn}">
+      <span class="sheet-dot" style="background:${c}"></span>
+      <span style="min-width:0"><span class="sheet-opt-l">${l}</span><div class="sheet-opt-s">${s}</div></span>
+    </button>`).join('');
+}
+function sheetPago(){cerrarSheet();openM('pay-modal');}
+
+function motosSelect(id,soloConConductor){
+  const lista=(DB.bikes||[]).filter(b=>soloConConductor?b.renter:true);
+  return `<select class="sheet-in" id="${id}"><option value="">Selecciona una moto</option>${
+    lista.map(b=>`<option value="${b.id}">${b.name}${b.renter?' — '+b.renter:' — libre'}</option>`).join('')}</select>`;
+}
+
+// ── Gasto o mantenimiento: aquí vive la regla 4 ──
+function sheetGasto(){
+  sheetHead('Gasto o mantenimiento',true);
+  gastoPago='empresa'; gastoItems=[];
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-f"><label>Tipo de gasto</label>
+      <select class="sheet-in" id="g-tipo" onchange="pintarGasto()">
+        <option value="mant">Mantenimiento</option>
+        <option value="seguros">SOAT y seguros</option>
+        <option value="parq">Parqueadero</option>
+        <option value="multas">Multas y trámites</option>
+        <option value="otros">Otros</option>
+      </select></div>
+    <div class="sheet-f"><label>Quién lo pagó</label>
+      <div class="seg">
+        <button class="seg-card" id="seg-emp" onclick="setGastoPago('empresa')">
+          <div class="seg-l">La empresa</div><div class="seg-s">Sale de caja</div></button>
+        <button class="seg-card" id="seg-con" onclick="setGastoPago('conductor')">
+          <div class="seg-l">El conductor</div><div class="seg-s">Se le descuenta de lo que debe</div></button>
+      </div>
+      <div id="g-aviso"></div></div>
+    <div id="g-detalle"></div>`;
+  setGastoPago('empresa');
+}
+function setGastoPago(v){
+  gastoPago=v;
+  document.getElementById('seg-emp').classList.toggle('on',v==='empresa');
+  document.getElementById('seg-con').classList.toggle('on',v==='conductor');
+  document.getElementById('g-aviso').innerHTML = v==='conductor'
+    ? `<div class="aviso-amber">El arreglo baja la deuda del conductor. La caja no se mueve porque esa plata nunca entró.</div>`
+    : '';
+  pintarGasto();
+}
+function pintarGasto(){
+  const tipo=document.getElementById('g-tipo').value;
+  const esMant=tipo==='mant';
+  const necesitaMoto=esMant||gastoPago==='conductor';
+  document.getElementById('g-detalle').innerHTML=`
+    <div class="sheet-f"><label>Moto${necesitaMoto?'':' (opcional)'}</label>${motosSelect('g-moto',gastoPago==='conductor')}</div>
+    <div class="sheet-f"><label>Fecha</label><input type="date" class="sheet-in" id="g-fecha" value="${tod()}"></div>
+    ${esMant?`
+      <div class="sheet-f"><label>Km al entrar al taller</label><input type="number" class="sheet-in" id="g-km" placeholder="Ej: 14650"></div>
+      <div class="sheet-f"><label>Taller</label><input type="text" class="sheet-in" id="g-taller" placeholder="Nombre del taller"></div>
+      <div class="sheet-f"><label>Ítems del servicio</label>
+        <div style="display:grid;grid-template-columns:1fr 110px auto;gap:8px">
+          <input type="text" class="sheet-in" id="g-item" placeholder="Ej: Aceite y filtro">
+          <input type="number" class="sheet-in" id="g-costo" placeholder="Costo">
+          <button class="sheet-in" style="width:auto;cursor:pointer;font-weight:600" onclick="agregarItem()">Agregar</button>
+        </div>
+        <div id="g-items" style="margin-top:10px"></div>
+      </div>`
+    :`<div class="sheet-f"><label>Descripción</label><input type="text" class="sheet-in" id="g-desc" placeholder="¿En qué se gastó?"></div>
+      <div class="sheet-f"><label>Monto</label><input type="number" class="sheet-in" id="g-monto" placeholder="0"></div>`}
+    <button class="sheet-go" onclick="guardarGasto()">Registrar</button>`;
+  pintarItems();
+}
+function agregarItem(){
+  const n=document.getElementById('g-item').value.trim();
+  const c=parseInt(document.getElementById('g-costo').value)||0;
+  if(!n||!c){alert('Escribe el ítem y su costo.');return;}
+  gastoItems.push({nombre:n,costo:c});
+  document.getElementById('g-item').value='';document.getElementById('g-costo').value='';
+  pintarItems();
+}
+function quitarItem(i){gastoItems.splice(i,1);pintarItems();}
+function pintarItems(){
+  const el=document.getElementById('g-items');if(!el)return;
+  const total=gastoItems.reduce((s,x)=>s+x.costo,0);
+  el.innerHTML=gastoItems.map((x,i)=>`<div class="item-row">
+      <span>${x.nombre}</span>
+      <span style="display:flex;align-items:center;gap:10px"><b>${money(x.costo)}</b>
+        <button onclick="quitarItem(${i})" style="background:none;border:none;color:var(--fire);cursor:pointer;font-size:15px">×</button></span>
+    </div>`).join('')+
+    (gastoItems.length?`<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:8px 10px">
+      <span>Total del servicio</span><span>${money(total)}</span></div>`:'');
+}
+
+function guardarGasto(){
+  const tipo=document.getElementById('g-tipo').value;
+  const esMant=tipo==='mant';
+  const bikeId=document.getElementById('g-moto').value||'';
+  const fecha=document.getElementById('g-fecha').value||tod();
+  const monto=esMant?gastoItems.reduce((s,x)=>s+x.costo,0)
+                    :(parseInt(document.getElementById('g-monto').value)||0);
+  const desc=esMant?(gastoItems.map(x=>x.nombre).join(' · ')||'Servicio de taller')
+                   :(document.getElementById('g-desc').value.trim()||'Gasto');
+  if(!monto){alert(esMant?'Agrega al menos un ítem.':'Escribe el monto.');return;}
+  if(gastoPago==='conductor'&&!bikeId){alert('Elige la moto: el descuento va contra la deuda de su conductor.');return;}
+
+  const cat=({mant:'mantenimiento',seguros:'soat',parq:'parqueadero',multas:'multas',otros:'misc'})[tipo];
+  const km=esMant?(parseInt(document.getElementById('g-km').value)||0):0;
+  const bike=(DB.bikes||[]).find(b=>b.id===bikeId);
+
+  // El servicio queda en el historial de la moto pase lo que pase: ocurrió.
+  if(bike&&esMant){
+    if(!bike.mantLog)bike.mantLog=[];
+    gastoItems.forEach(x=>bike.mantLog.push({tipo:x.nombre,km,date:fecha,costo:x.costo,
+      taller:document.getElementById('g-taller')?.value.trim()||''}));
+    if(km&&km>Number(bike.km||0))bike.km=String(km);
+  }
+
+  if(gastoPago==='empresa'){
+    DB.expenses.push({id:'e'+Date.now(),bikeId,cat,desc,amount:monto,date:fecha,
+      km:km||null,receipt:null,receiptURL:null});
+    save();cerrarSheet();showSaved(money(monto)+' registrado como gasto');
+  }else{
+    // Regla 4: baja la deuda, la caja NO se mueve y NO es gasto.
+    registrarAjuste(bikeId,monto,desc,fecha);
+    save();cerrarSheet();
+    showSaved(money(monto)+' menos a '+(bike?.renter||'el conductor')+' · la caja no cambia');
+  }
+  if(motoAbierta)renderMoto();
+}
+
+// ── Retiro: sale de caja pero NO es gasto de la operación (regla 7) ──
+const MOTIVOS_RETIRO=[['socio','Socio'],['reinversion','Reinversión'],['proveedor','Proveedor'],
+                      ['ahorro','Ahorro'],['impuestos','Impuestos'],['otro','Otro']];
+function sheetRetiro(){
+  sheetHead('Retiro de dinero',true);
+  periodo=periodo||'mes';
+  const L=construirLedger.apply(null,ventana());
+  const caja=L.length?L[L.length-1].acum:0;
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="aviso-violet">En caja hoy <b>${money(caja)}</b></div>
+    <div class="sheet-f"><label>Monto</label><input type="number" class="sheet-in" id="r-monto" placeholder="0"></div>
+    <div class="sheet-f"><label>Fecha</label><input type="date" class="sheet-in" id="r-fecha" value="${tod()}"></div>
+    <div class="sheet-f"><label>Motivo</label>
+      <select class="sheet-in" id="r-motivo">${MOTIVOS_RETIRO.map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select></div>
+    <div class="sheet-f"><label>Nota</label><input type="text" class="sheet-in" id="r-nota" placeholder="Para qué fue"></div>
+    <div style="font-size:11.5px;color:var(--ink2);line-height:1.5;margin-bottom:12px">
+      Queda en Dinero, en Retiros registrados. No cuenta como gasto de la operación.</div>
+    <button class="sheet-go" onclick="guardarRetiro()">Registrar retiro</button>`;
+}
+function guardarRetiro(){
+  const monto=parseInt(document.getElementById('r-monto').value)||0;
+  if(!monto){alert('Escribe el monto.');return;}
+  const motivo=document.getElementById('r-motivo').value;
+  DB.retiros.push({id:'r'+Date.now(),date:document.getElementById('r-fecha').value||tod(),
+    amount:monto,motivo,type:motivo,note:document.getElementById('r-nota').value.trim()||''});
+  save();cerrarSheet();
+  showSaved(money(monto)+' retirado · '+(MOTIVOS_RETIRO.find(m=>m[0]===motivo)||[,''])[1].toLowerCase());
+}
+
+// ── Entregar moto: crea la asignación y siembra el historial de tarifas ──
+function sheetEntregar(){
+  sheetHead('Entregar moto',true);
+  const libres=(DB.bikes||[]).filter(b=>!b.renter);
+  const conductores=(DB.drivers||[]).filter(d=>d.active!==false);
+  if(!libres.length){
+    document.getElementById('sheet-body').innerHTML=
+      `<div style="font-size:13px;color:var(--ink2);line-height:1.6">No hay motos libres. Todas están asignadas.</div>`;
+    return;
+  }
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-f"><label>Moto libre</label>
+      <select class="sheet-in" id="e-moto">${libres.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
+    <div class="sheet-f"><label>Conductor</label>
+      <select class="sheet-in" id="e-cond">
+        <option value="">Selecciona…</option>
+        ${conductores.map(d=>`<option value="${d.id}">${(d.fname||'')+' '+(d.lname||'')} — CC ${d.cc||'—'}</option>`).join('')}
+      </select>
+      ${conductores.length?'':'<div style="font-size:11.5px;color:var(--ink2);margin-top:6px">No hay conductores todavía. Créalo primero desde el menú.</div>'}
+    </div>
+    <div class="sheet-f"><label>Fecha de inicio</label><input type="date" class="sheet-in" id="e-desde" value="${tod()}"></div>
+    <div class="sheet-f"><label>Arriendo por día</label>
+      <input type="number" class="sheet-in" id="e-tarifa" value="${(DB.settings&&DB.settings.rate)||DR}"></div>
+    <div style="font-size:11.5px;color:var(--ink2);line-height:1.5;margin-bottom:12px">
+      Los días libres se configuran después, en la ficha de la moto.</div>
+    <button class="sheet-go" onclick="guardarEntrega()">Entregar moto</button>`;
+}
+function guardarEntrega(){
+  const bikeId=document.getElementById('e-moto').value;
+  const condId=document.getElementById('e-cond').value;
+  const desde=document.getElementById('e-desde').value||tod();
+  const tarifa=parseInt(document.getElementById('e-tarifa').value)||DR;
+  if(!condId){alert('Elige el conductor.');return;}
+  const b=(DB.bikes||[]).find(x=>x.id===bikeId);
+  const d=(DB.drivers||[]).find(x=>x.id===condId);
+  if(!b||!d)return;
+  b.renter=`${d.fname||''} ${d.lname||''}`.trim();
+  b.driverId=d.id;
+  b.startDate=desde;
+  b.rate=tarifa;
+  b.phone=b.phone||d.phone||'';
+  // Regla 3: la asignación arranca con su primera entrada de tarifa fechada.
+  b.rateHistory=[{rate:tarifa,fromDate:desde}];
+  if(!Array.isArray(b.diasLibres))b.diasLibres=[];
+  save();cerrarSheet();
+  showSaved(b.name+' entregada a '+b.renter+' · '+money(tarifa)+' al día');
+  abrirMoto(b.id);
 }
 
 function renderMoney(m){
