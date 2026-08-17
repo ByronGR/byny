@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.3 -->
+<!-- Byny Rental v5.4 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -739,7 +739,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.3</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v5.4</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -4504,16 +4504,34 @@ function construirCola(){
       texto:`${f.cliente} · ${f.placa} — ${dias} ${dias===1?'día':'días'} sin pagar`,
       meta:dias+'d',monto:money(f.debe),cta:'Cobrar',accion:`openPayForBike('${f.id}')`});
   });
+  // Los documentos se agrupan: cuatro avisos separados tapan lo que de verdad
+  // hay que decidir hoy. Un documento vencido hace meses tampoco es urgente
+  // "hoy" — es un pendiente, y así se enuncia.
+  const docs=[];
   (DB.bikes||[]).forEach(b=>{
     [['soatDate','SOAT'],['tecnicaDate','Técnico-mecánica']].forEach(([campo,nombre])=>{
       if(!b[campo])return;
       const d=Math.round((new Date(b[campo]+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
-      if(d>30||d<-365)return;
-      items.push({id:campo+'-'+b.id,tono:'#5CC8FF',tipo:'Documento',
-        texto:`${nombre} de ${b.name} ${d<0?'está vencida':'vence en '+d+' días'}`,
-        meta:d<0?'vencida':d+'d',monto:b.name,cta:'Renovar',accion:`goTab('motos')`});
+      if(d>30)return;
+      docs.push({moto:b.name,nombre,dias:d});
     });
   });
+  if(docs.length===1){
+    const x=docs[0];
+    items.push({id:'doc-unico',tono:'#5CC8FF',tipo:'Documento',
+      texto:`${x.nombre} de ${x.moto} ${x.dias<0?'está vencida':'vence en '+x.dias+' días'}`,
+      meta:x.dias<0?'vencida':x.dias+'d',monto:x.moto,cta:'Renovar',accion:`goTab('motos')`});
+  }else if(docs.length>1){
+    const motos=[...new Set(docs.map(d=>d.moto))];
+    const porVencer=docs.filter(d=>d.dias>=0).length;
+    const vencidos=docs.length-porVencer;
+    const partes=[];
+    if(vencidos)partes.push(vencidos+(vencidos===1?' vencido':' vencidos'));
+    if(porVencer)partes.push(porVencer+' por vencer');
+    items.push({id:'doc-grupo',tono:'#5CC8FF',tipo:'Documentos',
+      texto:`${docs.length} documentos de ${motos.length} ${motos.length===1?'moto':'motos'}: ${partes.join(' y ')}`,
+      meta:motos.join(' · '),monto:'Revisar fechas',cta:'Abrir',accion:`goTab('motos')`});
+  }
   try{
     const ult=Number(localStorage.getItem('byny_last_backup')||0);
     const dias=ult?Math.floor((Date.now()-ult)/86400000):99;
