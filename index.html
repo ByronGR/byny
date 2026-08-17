@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.7 -->
+<!-- Byny Rental v5.8 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -742,7 +742,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.7</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v5.8</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -1783,11 +1783,12 @@ function normalizeDB(data){
   const parsed=data||{};
   return{
     bikes:[],payments:[],expenses:[],graceDays:[],
-    retiros:[],renterHistory:[],contracts:[],drivers:[],appointments:[],
+    retiros:[],ajustes:[],renterHistory:[],contracts:[],drivers:[],appointments:[],
     pendingApprovals:[],
     settings:{rate:DR,name:'Byny Rental'},
     ...parsed,
     fbConfig:FIREBASE_CFG,
+    ajustes:parsed.ajustes||[],
     renterHistory:parsed.renterHistory||[],
     contracts:parsed.contracts||[],
     drivers:parsed.drivers||[],
@@ -1843,7 +1844,7 @@ function load(){
 // reescribía el archivo entero, así que dos personas guardando a la vez se
 // pisaban. Ahora cada moto, pago, gasto, etc. es su propio documento y sólo se
 // escribe lo que cambió.
-const COLECCIONES=['bikes','drivers','payments','expenses','retiros',
+const COLECCIONES=['bikes','drivers','payments','expenses','retiros','ajustes',
                    'graceDays','contracts','appointments','renterHistory'];
 const DOC_LEGADO={col:'byny',doc:'data'};
 
@@ -2295,6 +2296,66 @@ function telDeMoto(bike){
 // Formato LLLDDL, p. ej. AJC81F → primer dígito 8 → lunes.
 // Restricción de 5:00 a. m. a 8:00 p. m., un solo día entre semana.
 const PYP_HORARIO='5:00 a. m. — 8:00 p. m.';
+// ── Regla 4: arreglos que pagó el conductor ──
+// El conductor paga un arreglo que le tocaba a la empresa. NO es ingreso (esa
+// plata nunca entró a caja), NO es gasto (la empresa no lo pagó) y NO es un
+// pago. Es un cuarto tipo de movimiento: baja la deuda y la caja no se mueve.
+function ajustesDeMoto(bikeId){
+  return (DB.ajustes||[]).filter(a=>a.bikeId===bikeId);
+}
+function totalAjustes(bikeId){
+  return ajustesDeMoto(bikeId).reduce((s,a)=>s+Number(a.monto||0),0);
+}
+function registrarAjuste(bikeId,monto,concepto,fecha){
+  if(!DB.ajustes)DB.ajustes=[];
+  DB.ajustes.push({id:'aj'+Date.now(),bikeId,monto:Number(monto)||0,
+    concepto:concepto||'Arreglo pagado por el conductor',fecha:fecha||tod()});
+}
+
+// ── Regla 2: días libres ──
+// Índices de día de semana, 0 = Lunes … 6 = Domingo. En un día libre NO se
+// cobra arriendo: el día no está "pendiente", simplemente no es facturable.
+function diasLibresDe(bike){
+  const v=bike&&bike.diasLibres;
+  return Array.isArray(v)?v.filter(n=>n>=0&&n<=6):[];
+}
+function esDiaLibre(bike,ds){
+  return diasLibresDe(bike).includes(diaSemana(ds));
+}
+// Un día libre nunca puede caer en el pico y placa de la moto: sería regalar un
+// día que el conductor ya no puede trabajar.
+function diaLibrePermitido(bike,idx){
+  const dig=digitoDeMoto(bike);
+  if(dig==='')return true;
+  return !(pypMap()[parseInt(dig)]||[]).includes(idx===6?7:idx+1);
+}
+// Lo que cuesta la concesión: días libres × tarifa × 4,33 semanas.
+function costoDiasLibres(bike){
+  const n=diasLibresDe(bike).length;
+  if(!n)return 0;
+  return Math.round(n*getBikeCurrentRate(bike)*4.33);
+}
+
+// ── Regla 6: un día resuelve a exactamente un estado ──
+// Precedencia: off > libre > pyp > (pago | gracia | pendiente) > futuro.
+// libre y pyp van ANTES del estado de pago: un día no facturable jamás puede
+// quedar como pendiente.
+function estadoDia(bike,ds,ledger){
+  if(!bike||!bike.renter||!bike.startDate||ds<bike.startDate)return 'off';
+  if(ds>tod())return 'futuro';
+  if(esDiaLibre(bike,ds))return 'libre';
+  if(isPYP(ds,digitoDeMoto(bike)))return 'pyp';
+  const d=(ledger||{})[ds];
+  if(!d)return 'pendiente';
+  if(d.status==='grace')return 'gracia';
+  if(d.status==='paid')return 'pago';
+  if(d.status==='partial')return 'pendiente';
+  return 'pendiente';
+}
+function esFacturable(bike,ds,ledger){
+  return !['off','libre','pyp','futuro'].includes(estadoDia(bike,ds,ledger));
+}
+
 function digitoDePlaca(placa){
   const m=String(placa||'').match(/\d/);
   return m?m[0]:'';
@@ -2462,7 +2523,7 @@ function calcBikeBalance(bike,hasta){
       if(day.status==='unpaid')balance+=(day.rate||rate);
       else if(day.status==='partial')balance+=((day.rate||rate)-day.amount);
     }
-    return Math.max(0,balance-(creditCarryover||0));
+    return Math.max(0,balance-(creditCarryover||0)-totalAjustes(bike.id));
   }catch(e){
     // Fallback to simple calculation if ledger fails
     const today=tod();
@@ -3815,7 +3876,7 @@ function exportData(){
 
 // Lunes de la semana en curso.
 function lunesDeEstaSemana(){return sumaDias(tod(),-diaSemana(tod()));}
-const LISTAS_IMPORT=['bikes','payments','expenses','retiros','drivers','graceDays',
+const LISTAS_IMPORT=['bikes','payments','expenses','retiros','ajustes','drivers','graceDays',
                      'contracts','appointments','renterHistory'];
 
 // Importar SUMA por defecto. Antes reemplazaba todo sin avisar: importar un
@@ -4108,12 +4169,18 @@ function construirLedger(desde,hasta){
     let mora=0;
     (DB.bikes||[]).forEach(b=>{
       const L=ledgers[b.id]||{};
+      let bruta=0;
       Object.keys(L).forEach(d2=>{
         if(d2>ds)return;
         const day=L[d2];
-        if(day.status==='unpaid')mora+=(day.rate||Number(b.rate)||DR);
-        else if(day.status==='partial')mora+=((day.rate||Number(b.rate)||DR)-(day.amount||0));
+        // libre y pyp nunca suman: no son facturables (reglas 2 y 6)
+        if(day.status==='unpaid')bruta+=(day.rate||Number(b.rate)||DR);
+        else if(day.status==='partial')bruta+=((day.rate||Number(b.rate)||DR)-(day.amount||0));
       });
+      // los arreglos que pagó el conductor bajan la deuda (regla 4)
+      const aj=(DB.ajustes||[]).filter(a=>a.bikeId===b.id&&(a.fecha||'')<=ds)
+                               .reduce((t,a)=>t+Number(a.monto||0),0);
+      mora+=Math.max(0,bruta-aj);
     });
     filas.push({date:ds,ingreso:ing,deposito:dep,gasto,g,retiro:ret,
                 rentadas:activas.length,size,mora,acum,
@@ -6107,7 +6174,9 @@ function buildDayLedger(bikeId,hasta){
   const allDays=[];
   for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
     const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    if(isPYP(ds,digitoDeMoto(bike))){
+    if(esDiaLibre(bike,ds)){
+      ledger[ds]={status:'libre',amount:0,owed:0};
+    }else if(isPYP(ds,digitoDeMoto(bike))){
       ledger[ds]={status:'pyp',amount:0,owed:0};
     }else if(graceDays.has(ds)){
       ledger[ds]={status:'grace',amount:0,owed:0};
