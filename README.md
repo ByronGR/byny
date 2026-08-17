@@ -60,6 +60,16 @@ the rotation in force from 3 August 2026.
 Update it in the app when the city rotates — not in the code. Restriction days are
 non-billable, so a stale table silently overcharges and undercharges drivers.
 
+## Importing
+
+`Importar JSON` **adds** to what is already loaded; it does not replace it. Replacing is
+still possible but takes two deliberate confirmations, and either way a full copy of the
+prior state is written to a `byny_rescate_import_*` key in localStorage first.
+
+The old behaviour was a silent full replace, which cost two hand-entered bikes on
+2026-08-16: importing a one-bike file deleted everything else. Merging is by `id`; an
+incoming record whose id already exists is given a new one rather than dropped.
+
 ## Files and receipts
 
 Receipt photos and driver documents go to **Firebase Storage**; only the URL is kept in
