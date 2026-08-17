@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.1 -->
+<!-- Byny Rental v5.2 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -739,7 +739,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.1</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v5.2</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -951,7 +951,15 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   </div>
   <div class="card">
     <div class="card-head"><span class="card-title" style="color:var(--fire)">Zona de peligro</span></div>
-    <button class="btn danger" onclick="resetAll()">Borrar todos los datos</button>
+    <div style="font-size:13px;color:var(--ink2);margin-bottom:1rem;line-height:1.6">
+      <strong>Empezar desde cero</strong> borra los movimientos de dinero pero conserva tus motos
+      y conductores, y deja registrado el efectivo que tienes hoy. Es lo que quieres si vas a
+      arrancar limpio sin volver a escribir la flota.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn solid" onclick="empezarDesdeCero()">Empezar desde cero</button>
+      <button class="btn danger" onclick="resetAll()">Borrar absolutamente todo</button>
+    </div>
   </div>
 </div>
 
@@ -3849,6 +3857,52 @@ function importData(e){
   };
   r.readAsText(f);
 }
+// "Empezar desde cero": borra TODO el movimiento de dinero, conserva motos y
+// conductores, fija la fecha desde la que se cuentan los arriendos y deja el
+// efectivo que realmente hay como un depósito de saldo inicial.
+// Es una acción del usuario, no datos escritos en el código: nada puede
+// reaparecer solo en otro dispositivo.
+function empezarDesdeCero(){
+  const movs=(DB.payments||[]).length+(DB.expenses||[]).length+(DB.retiros||[]).length+(DB.graceDays||[]).length;
+  if(!confirm('Empezar desde cero.\n\n'+
+    'Se borran '+movs+' movimiento(s): pagos, gastos, retiros y días de gracia.\n'+
+    'Se CONSERVAN las motos y los conductores.\n\n¿Continuar?'))return;
+
+  const crudo=prompt('¿Cuánto dinero tienes hoy en caja? (solo números)','');
+  if(crudo===null)return;
+  const saldo=parseInt(String(crudo).replace(/[^0-9]/g,''))||0;
+
+  const desde=prompt('¿Desde qué fecha se cuentan los arriendos?\n\n'+
+    'Formato AAAA-MM-DD. Los días anteriores no se cobran.',tod());
+  if(desde===null)return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(desde)){alert('Fecha inválida. Usa el formato AAAA-MM-DD.');return;}
+
+  const conArrendatario=(DB.bikes||[]).filter(b=>b.renter).length;
+  if(!confirm('Resumen:\n\n'+
+    '· Se borran '+movs+' movimiento(s)\n'+
+    '· Saldo inicial en caja: '+money(saldo)+'\n'+
+    '· Los arriendos empiezan a contarse el '+desde+'\n'+
+    '· Afecta a '+conArrendatario+' moto(s) con arrendatario\n\n'+
+    'Esto no se puede deshacer. ¿Confirmas?'))return;
+
+  // Copia de seguridad antes de borrar nada.
+  try{localStorage.setItem('byny_rescate_cero_'+Date.now(),JSON.stringify(cloneForStorage(DB)));}catch(e){}
+
+  DB.payments=[];DB.expenses=[];DB.retiros=[];DB.graceDays=[];
+  DB.appointments=[];DB.pendingApprovals=[];
+  (DB.bikes||[]).forEach(b=>{if(b.renter)b.startDate=desde;});
+  if(saldo>0){
+    DB.payments.push({id:'p'+Date.now(),bikeId:'',payType:'general',generalType:'deposito',
+      label:'Depósito',amount:saldo,date:desde,method:'Bancolombia',
+      notes:'Saldo inicial al empezar desde cero',receipt:null,receiptURL:null});
+  }
+  colaHecha=[];
+  save();render();
+  alert('Listo.\n\nEn caja: '+money(saldo)+'\n'+
+        'Los arriendos se cuentan desde el '+desde+'.\n\n'+
+        'De aquí en adelante, todo lo que registres es real.');
+}
+
 function resetAll(){
   if(confirm('¿Borrar todos los datos del negocio? Esto NO eliminará la conexión con Firebase.')){
     try{localStorage.removeItem(PENDING_KEY);}catch(e){}
@@ -4443,9 +4497,12 @@ function construirCola(){
       meta:dias+'d',monto:money(f.debe),cta:'Cobrar',accion:`openPayForBike('${f.id}')`});
   });
   (DB.bikes||[]).forEach(b=>{
-    [['soatDate','SOAT'],['tecnicaDate','Técnico-mecánica']].forEach(([campo,nombre])=>{
+    // La fecha guardada es la de expedición: el SOAT vence al año y la
+    // técnico-mecánica a los dos.
+    [['soatDate','SOAT',1],['tecnicaDate','Técnico-mecánica',2]].forEach(([campo,nombre,anios])=>{
       if(!b[campo])return;
-      const d=Math.round((new Date(b[campo]+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
+      const vence=addYearsDateKey(b[campo],anios);
+      const d=Math.round((new Date(vence+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
       if(d>30||d<-365)return;
       items.push({id:campo+'-'+b.id,tono:'#5CC8FF',tipo:'Documento',
         texto:`${nombre} de ${b.name} ${d<0?'está vencida':'vence en '+d+' días'}`,
@@ -4777,9 +4834,13 @@ function renderBikeRow(b,now){
   const waMsg=encodeURIComponent('Hola '+b.renter+', tienes pendiente '+(owed>0?fmt(owed)+' ('+owedDays+' días) ':'')+' de arriendo. Byny Rental');
 
   // Doc expiry
-  const docExp=(ds)=>{if(!ds)return null;return Math.ceil((new Date(ds+'T12:00:00')-now)/86400000);};
-  const soatDays=docExp(b.soatDate);
-  const tecnicaDays=docExp(b.tecnicaDate);
+  // La fecha guardada es la de EXPEDICIÓN; el documento vence 1 año después
+  // (SOAT) o 2 (técnico-mecánica). Antes se contaban los días hasta la
+  // expedición, así que un SOAT vigente hasta 2027 salía en rojo como vencido.
+  const docExp=(ds,anios)=>{if(!ds)return null;
+    return Math.ceil((new Date(addYearsDateKey(ds,anios)+'T12:00:00')-now)/86400000);};
+  const soatDays=docExp(b.soatDate,1);
+  const tecnicaDays=docExp(b.tecnicaDate,2);
   const docAlert=(soatDays!==null&&soatDays<=60)||(tecnicaDays!==null&&tecnicaDays<=60);
 
   // Financial
@@ -4949,8 +5010,8 @@ function renderBikeRow(b,now){
       <!-- DOCUMENTOS ANUALES -->
       <div style="padding:.875rem 1rem;border-top:1px solid var(--line)">
         <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:.625rem">Documentos anuales</div>
-        ${docRow('SOAT',b.soatDate,soatDays,b.soatPhoto||null)}
-        ${docRow('Técnica Mecánica',b.tecnicaDate,tecnicaDays,b.tecnicaPhoto||null)}
+        ${docRow('SOAT',addYearsDateKey(b.soatDate,1),soatDays,b.soatPhoto||null)}
+        ${docRow('Técnica Mecánica',addYearsDateKey(b.tecnicaDate,2),tecnicaDays,b.tecnicaPhoto||null)}
       </div>
 
       <!-- INSURANCE QUICK-ACCESS CARD -->
