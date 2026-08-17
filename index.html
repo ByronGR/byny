@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.2 -->
+<!-- Byny Rental v5.3 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -739,7 +739,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.2</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v5.3</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -1076,11 +1076,13 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
       <div class="frow"><label>Año modelo</label><input type="number" id="bk-year" placeholder="2023"></div>
       <div class="frow"><label>Referencia motor</label><input type="text" id="bk-engine" placeholder="125cc"></div>
     </div>
+    <div class="hint-opt" style="margin:-.4rem 0 .9rem">Escribe la fecha en que vence cada documento, tal como aparece en él.
+      La técnico-mecánica de una moto nueva se hace por primera vez a los 2 años de la matrícula; después, cada año.</div>
     <div class="divider"></div>
     <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:.875rem">Documentos anuales</div>
     <div class="fgrid">
-      <div class="frow"><label>SOAT — inicio vigencia</label><input type="date" id="bk-soat"></div>
-      <div class="frow"><label>Técnica — inicio vigencia</label><input type="date" id="bk-tecnica"></div>
+      <div class="frow"><label>SOAT — vence</label><input type="date" id="bk-soat"></div>
+      <div class="frow"><label>Técnico-mecánica — vence</label><input type="date" id="bk-tecnica"></div>
     </div>
     <div class="divider"></div>
     <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:.875rem">Kilometraje</div>
@@ -1347,8 +1349,9 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
         </div>
       </div>
       <div class="frow">
-        <label>Técnica Mecánica — vence</label>
+        <label>Técnico-mecánica — vence</label>
         <input type="date" id="edit-bk-tecnica">
+        <div class="hint-opt" style="margin:.35rem 0 0">Moto nueva: la primera se hace a los 2 años de la matrícula. Después, cada año.</div>
         <div style="margin-top:6px">
           <label id="edit-tecnica-photo-lbl" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px dashed var(--line2);border-radius:var(--r2);cursor:pointer;font-size:11px;color:var(--ink3);font-weight:600">
             📎 <span id="edit-tecnica-photo-txt">Subir foto Técnica</span>
@@ -3862,18 +3865,23 @@ function importData(e){
 // efectivo que realmente hay como un depósito de saldo inicial.
 // Es una acción del usuario, no datos escritos en el código: nada puede
 // reaparecer solo en otro dispositivo.
+// Valores de arranque de Byny, sólo como sugerencia en los diálogos. NO son
+// datos que la app escriba sola: hasta que alguien pulsa el botón y confirma,
+// no existen. Para otro negocio basta con cambiarlos o borrarlos.
+const ARRANQUE={caja:2066196,desde:'2026-07-29'};
+
 function empezarDesdeCero(){
   const movs=(DB.payments||[]).length+(DB.expenses||[]).length+(DB.retiros||[]).length+(DB.graceDays||[]).length;
   if(!confirm('Empezar desde cero.\n\n'+
     'Se borran '+movs+' movimiento(s): pagos, gastos, retiros y días de gracia.\n'+
     'Se CONSERVAN las motos y los conductores.\n\n¿Continuar?'))return;
 
-  const crudo=prompt('¿Cuánto dinero tienes hoy en caja? (solo números)','');
+  const crudo=prompt('¿Cuánto dinero tienes hoy en caja? (solo números)',String(ARRANQUE.caja||''));
   if(crudo===null)return;
   const saldo=parseInt(String(crudo).replace(/[^0-9]/g,''))||0;
 
   const desde=prompt('¿Desde qué fecha se cuentan los arriendos?\n\n'+
-    'Formato AAAA-MM-DD. Los días anteriores no se cobran.',tod());
+    'Formato AAAA-MM-DD. Los días anteriores no se cobran.',ARRANQUE.desde||tod());
   if(desde===null)return;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(desde)){alert('Fecha inválida. Usa el formato AAAA-MM-DD.');return;}
 
@@ -4497,12 +4505,9 @@ function construirCola(){
       meta:dias+'d',monto:money(f.debe),cta:'Cobrar',accion:`openPayForBike('${f.id}')`});
   });
   (DB.bikes||[]).forEach(b=>{
-    // La fecha guardada es la de expedición: el SOAT vence al año y la
-    // técnico-mecánica a los dos.
-    [['soatDate','SOAT',1],['tecnicaDate','Técnico-mecánica',2]].forEach(([campo,nombre,anios])=>{
+    [['soatDate','SOAT'],['tecnicaDate','Técnico-mecánica']].forEach(([campo,nombre])=>{
       if(!b[campo])return;
-      const vence=addYearsDateKey(b[campo],anios);
-      const d=Math.round((new Date(vence+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
+      const d=Math.round((new Date(b[campo]+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
       if(d>30||d<-365)return;
       items.push({id:campo+'-'+b.id,tono:'#5CC8FF',tipo:'Documento',
         texto:`${nombre} de ${b.name} ${d<0?'está vencida':'vence en '+d+' días'}`,
@@ -4834,13 +4839,13 @@ function renderBikeRow(b,now){
   const waMsg=encodeURIComponent('Hola '+b.renter+', tienes pendiente '+(owed>0?fmt(owed)+' ('+owedDays+' días) ':'')+' de arriendo. Byny Rental');
 
   // Doc expiry
-  // La fecha guardada es la de EXPEDICIÓN; el documento vence 1 año después
-  // (SOAT) o 2 (técnico-mecánica). Antes se contaban los días hasta la
-  // expedición, así que un SOAT vigente hasta 2027 salía en rojo como vencido.
-  const docExp=(ds,anios)=>{if(!ds)return null;
-    return Math.ceil((new Date(addYearsDateKey(ds,anios)+'T12:00:00')-now)/86400000);};
-  const soatDays=docExp(b.soatDate,1);
-  const tecnicaDays=docExp(b.tecnicaDate,2);
+  // Se guarda la fecha de VENCIMIENTO tal cual la trae el documento. No se
+  // calcula: la técnico-mecánica de una moto nueva vence a los 2 años y luego
+  // cada año, así que ninguna fórmula fija sirve para todas las motos.
+  const docExp=(ds)=>{if(!ds)return null;
+    return Math.ceil((new Date(ds+'T12:00:00')-now)/86400000);};
+  const soatDays=docExp(b.soatDate);
+  const tecnicaDays=docExp(b.tecnicaDate);
   const docAlert=(soatDays!==null&&soatDays<=60)||(tecnicaDays!==null&&tecnicaDays<=60);
 
   // Financial
@@ -5010,8 +5015,8 @@ function renderBikeRow(b,now){
       <!-- DOCUMENTOS ANUALES -->
       <div style="padding:.875rem 1rem;border-top:1px solid var(--line)">
         <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:.625rem">Documentos anuales</div>
-        ${docRow('SOAT',addYearsDateKey(b.soatDate,1),soatDays,b.soatPhoto||null)}
-        ${docRow('Técnica Mecánica',addYearsDateKey(b.tecnicaDate,2),tecnicaDays,b.tecnicaPhoto||null)}
+        ${docRow('SOAT',b.soatDate,soatDays,b.soatPhoto||null)}
+        ${docRow('Técnico-mecánica',b.tecnicaDate,tecnicaDays,b.tecnicaPhoto||null)}
       </div>
 
       <!-- INSURANCE QUICK-ACCESS CARD -->
@@ -5022,11 +5027,11 @@ function renderBikeRow(b,now){
           <div class="ins-card-grid">
             ${b.soatDate?`<div class="ins-item">
               <span class="il">SOAT vence</span>
-              <span class="iv" style="color:${soatDays<0?'var(--fire)':soatDays<=60?'var(--sun)':'var(--leaf)'}">${fmtD(addYearsDateKey(b.soatDate,1)||b.soatDate)}</span>
+              <span class="iv" style="color:${soatDays<0?'var(--fire)':soatDays<=60?'var(--sun)':'var(--leaf)'}">${fmtD(b.soatDate)}</span>
             </div>`:''}
             ${b.tecnicaDate?`<div class="ins-item">
               <span class="il">Técnica vence</span>
-              <span class="iv" style="color:${tecnicaDays<0?'var(--fire)':tecnicaDays<=60?'var(--sun)':'var(--leaf)'}">${fmtD(addYearsDateKey(b.tecnicaDate,2)||b.tecnicaDate)}</span>
+              <span class="iv" style="color:${tecnicaDays<0?'var(--fire)':tecnicaDays<=60?'var(--sun)':'var(--leaf)'}">${fmtD(b.tecnicaDate)}</span>
             </div>`:''}
             ${b.plateDigit!==''&&b.plateDigit!==null&&b.plateDigit!==undefined?`<div class="ins-item">
               <span class="il">Pico y Placa</span>
