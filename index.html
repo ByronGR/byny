@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v4.1 -->
+<!-- Byny Rental v4.2 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -602,7 +602,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="brand">
     <span class="brand-name">Byny Rental</span>
     <span class="brand-sub">Medellín</span>
-    <span class="brand-ver">v4.1</span>
+    <span class="brand-ver">v4.2</span>
   </div>
   <div class="topbar-right">
     <span class="date-chip" id="hdr-date"></span>
@@ -2180,8 +2180,8 @@ function getMonthlyPayments(m,y,{rentalOnly=false}={}){
   });
 }
 
-function getBikeOwedDays(bike){
-  const bal=calcBikeBalance(bike);
+function getBikeOwedDays(bike,hasta){
+  const bal=calcBikeBalance(bike,hasta);
   const rate=getBikeCurrentRate(bike);
   return rate>0?Math.ceil(bal/rate):0;
 }
@@ -2236,11 +2236,11 @@ function graceForBike(bikeId,m,y){
   }).length;
 }
 
-function calcBikeBalance(bike){
+function calcBikeBalance(bike,hasta){
   if(!bike.renter||!bike.startDate)return 0;
   const rate=Number(bike.rate)||Number(DB.settings?.rate)||DR;
   try{
-    const result=buildDayLedger(bike.id);
+    const result=buildDayLedger(bike.id,hasta);
     if(!result||!result.allDays)throw new Error('no ledger');
     const {ledger,allDays,creditCarryover}=result;
     let balance=0;
@@ -3750,6 +3750,20 @@ function render(){
 }
 
 // ── KPIs ──
+// Último día del mes que se está viendo, sin pasar de hoy: las tarjetas de
+// "En caja" y "Por cobrar" son acumuladas, así que sin este corte mostraban
+// siempre el total de hoy aunque estuvieras mirando otro mes.
+function cierreDelMesVisto(){
+  const ultimo=new Date(VY,VM+1,0);
+  const ds=`${ultimo.getFullYear()}-${String(ultimo.getMonth()+1).padStart(2,'0')}-${String(ultimo.getDate()).padStart(2,'0')}`;
+  const hoy=tod();
+  return ds>hoy?hoy:ds;
+}
+function mesEsFuturo(){
+  const primero=new Date(VY,VM,1), hoy=new Date(tod()+'T12:00:00');
+  return primero>new Date(hoy.getFullYear(),hoy.getMonth()+1,0);
+}
+
 function renderKPIs(){
   const el=document.getElementById('dash-hero');if(!el)return;
   const elSmall=document.getElementById('dash-small');
@@ -3766,7 +3780,8 @@ function renderKPIs(){
   const retiros=rets.reduce((s,r)=>s+r.amount,0);
   const ganancia=income-expenses;
   const caja=ganancia-retiros;
-  const owed=DB.bikes.reduce((s,b)=>s+Math.max(0,calcBikeBalance(b)),0);
+  const corte=cierreDelMesVisto();
+  const owed=DB.bikes.reduce((s,b)=>s+Math.max(0,calcBikeBalance(b,corte)),0);
   let totalBillable=0,totalPaidDays=0;
   const totalDaysM=daysInMonth(VM,VY);
   DB.bikes.filter(b=>b.renter).forEach(b=>{
@@ -3801,9 +3816,10 @@ function renderKPIs(){
   const projectedRecurringExpenses=Math.round(recurringExpenseDailyAverage()*remainingDaysForAvg);
   const projectedTotal=income+expectedRemainingIncome-expenses-projectedRecurringExpenses;
   // All-time caja
-  const allIncome=DB.payments.reduce((s,p)=>s+Number(p.amount),0);
-  const allExp=DB.expenses.reduce((s,e)=>s+Number(e.amount),0);
-  const allRetiros=DB.retiros.reduce((s,r)=>s+Number(r.amount),0);
+  const hasta=d=>d&&d<=corte;
+  const allIncome=DB.payments.filter(p=>hasta(p.date)).reduce((s,p)=>s+Number(p.amount),0);
+  const allExp=DB.expenses.filter(e=>hasta(e.date)).reduce((s,e)=>s+Number(e.amount),0);
+  const allRetiros=DB.retiros.filter(r=>hasta(r.date)).reduce((s,r)=>s+Number(r.amount),0);
   const cajaAllTime=allIncome-allExp-allRetiros;
 
   // Utilization — days elapsed so far this month only
@@ -3828,17 +3844,20 @@ function renderKPIs(){
   });
   const utilElapsed=elapsedBillable>0?Math.round(elapsedPaidDays/elapsedBillable*100):0;
 
-  const owedDaysTotal=DB.bikes.reduce((s,b)=>s+(b.renter?getBikeOwedDays(b):0),0);
+  const owedDaysTotal=DB.bikes.reduce((s,b)=>s+(b.renter?getBikeOwedDays(b,corte):0),0);
+  // Deja claro a qué fecha están las cifras acumuladas.
+  const esMesActual=corte===tod();
+  const alCorte=esMesActual?'hasta hoy':'al '+fmtD(corte);
   el.innerHTML=`
     <div class="dash-hero-card">
       <div class="dash-hero-label">En caja</div>
       <div class="dash-hero-val ${cajaAllTime>=0?'green':'red'}">${fmt(cajaAllTime)}</div>
-      <div class="dash-hero-sub">Histórico: ingresos - gastos - retiros</div>
+      <div class="dash-hero-sub">Ingresos - gastos - retiros, ${alCorte}</div>
     </div>
     <div class="dash-hero-card warn">
       <div class="dash-hero-label">Por cobrar</div>
       <div class="dash-hero-val red">${fmt(owed)}</div>
-      <div class="dash-hero-sub">${owed>0?'= '+owedDaysTotal+'d pendientes':'Al día ✓'}</div>
+      <div class="dash-hero-sub">${owed>0?'= '+owedDaysTotal+'d pendientes '+alCorte:'Al día ✓ '+alCorte}</div>
     </div>
     <div class="dash-hero-card sky">
       <div class="dash-hero-label">Ganancia del mes</div>
@@ -5441,7 +5460,7 @@ function openPayCalendar(bikeId){
 function calPrevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderPayCalendar();}
 function calNextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderPayCalendar();}
 
-function buildDayLedger(bikeId){
+function buildDayLedger(bikeId,hasta){
   // Build a day-by-day ledger starting from bike start date
   // Each payment fills consecutive billable days from the last unpaid day
   const bike=DB.bikes.find(b=>b.id===bikeId);if(!bike||!bike.startDate)return{};
@@ -5450,7 +5469,8 @@ function buildDayLedger(bikeId){
     return getBikeRateForDate(bike,ds);
   };
   const rate=getBikeCurrentRate(bike); // current rate (also used as default)
-  const today=tod();
+  // 'hasta' permite ver el saldo tal como estaba al cierre de un mes anterior.
+  const today=hasta||tod();
   const ledger={}; // date string -> {status:'paid'|'partial'|'unpaid'|'pyp'|'grace'|'future', amount:0, payId}
 
   // Get all rental payments sorted by date
