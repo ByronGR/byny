@@ -6,44 +6,49 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v4.4 -->
+<!-- Byny Rental v5.0 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Byny Rental">
 <meta name="theme-color" content="#f7f5f0">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --ink:#121417;--ink2:#38404a;--ink3:#6d7480;--ink4:#a9b0ba;
-  --paper:#f5f7fb;--surface:#ffffff;--surface2:#eef2f7;--surface3:#dfe6ef;
-  --line:rgba(18,20,23,0.08);--line2:rgba(18,20,23,0.15);
-  --fire:#d94b3d;--fire-bg:#fff0ee;--fire-line:#f0a8a0;
-  --leaf:#087a55;--leaf-bg:#e7f7f0;--leaf-line:#79d3ad;
-  --sky:#3157d5;--sky-bg:#edf1ff;--sky-line:#aab9ff;
-  --sun:#a15f03;--sun-bg:#fff5db;--sun-line:#edc15a;
-  --dust:#5b6170;--dust-bg:#eceff4;--dust-line:#b5bdca;
-  --r:16px;--r2:12px;--r3:8px;
-  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
-  --shadow2:0 2px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+  /* ── Byny 2026 — tokens del handoff de diseño ── */
+  --ink:#14181D;--ink2:#6B7681;--ink3:#9AA5AE;--ink4:#C3CBD2;
+  --paper:#F4F6F8;--surface:#FFFFFF;--surface2:#F9FAFB;--surface3:#EAEEF2;
+  --line:#E3E8ED;--line2:#EEF1F4;--divider:#F4F6F8;--track:#F1F4F6;
+  --leaf:#0E9F6E;--leaf-deep:#0B7C56;--leaf-bg:#E7F6F0;--leaf-surface:#F7FBF9;
+  --leaf-line:#DDEFE7;--leaf-pale:#C9EFE0;
+  --fire:#E8452B;--fire-deep:#C0341E;--fire-bg:#FDECE8;--fire-surface:#FEF7F5;
+  --fire-line:#F8DCD5;--fire-pale:#F3B4A5;
+  --sun:#F0A400;--sun-pale:#FBCE7A;--sun-bg:#FFF4DE;--sun-text:#8A6100;--sun-line:#EDC15A;
+  --violet:#A98BFF;--violet-text:#7C5CD6;
+  --sky:#5CC8FF;--sky-bg:#EDF6FF;--sky-line:#BFE4FF;
+  --mint:#4ED8A4;--coral:#FF7A5C;
+  --dark-surface:#1C2229;--dark-line:#262E36;--dark-ink2:#8B979F;--dark-ink3:#7D8A94;
+  --empty-day:#EDF0F3;
+  --dust:#6B7681;--dust-bg:#EEF1F4;--dust-line:#C3CBD2;
+  --r:12px;--r2:8px;--r3:6px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --shadow:0 1px 3px rgba(20,24,29,.10);
+  --shadow2:0 6px 18px rgba(20,24,29,.10);
+  --shadow3:0 12px 32px rgba(20,24,29,.16);
 }
-@media(prefers-color-scheme:dark){:root{
-  --ink:#f0ede6;--ink2:#c8c4ba;--ink3:#7a776e;--ink4:#4a4840;
-  --paper:#111009;--surface:#1c1a16;--surface2:#222019;--surface3:#2a2820;
-  --line:rgba(240,237,230,0.07);--line2:rgba(240,237,230,0.12);
-  --fire:#e8703a;--fire-bg:#2a1508;--fire-line:#6b2e0e;
-  --leaf:#3dba7a;--leaf-bg:#061f12;--leaf-line:#0d4a28;
-  --sky:#6b9ef5;--sky-bg:#080f24;--sky-line:#1a3570;
-  --sun:#f0c060;--sun-bg:#1a1004;--sun-line:#4a3008;
-  --dust:#9a9690;--dust-bg:#1e1c18;--dust-line:#3a3830;
-  --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.2);
-  --shadow2:0 2px 8px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
-}}
 
-html{background:linear-gradient(180deg,#f9fbff 0%,var(--paper) 220px);scroll-behavior:smooth}
-body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow-x:hidden}
+@keyframes bynyPulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes bynyDraw{from{stroke-dashoffset:1200}to{stroke-dashoffset:0}}
+@keyframes bynyRise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+::selection{background:var(--leaf-pale)}
+a{color:var(--leaf)}a:hover{color:var(--leaf-deep)}
+
+html{background:var(--paper);scroll-behavior:smooth}
+body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow-x:hidden;background:var(--paper);font-variant-numeric:tabular-nums;font-feature-settings:'tnum';padding-bottom:64px}
 
 /* ═══ SCROLLBAR ═══ */
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -51,7 +56,6 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
 
 /* ═══ LAYOUT ═══ */
-.shell{max-width:920px;margin:0 auto;padding:0 1rem 7rem}
 
 /* ═══ HEADER ═══ */
 .topbar{
@@ -108,6 +112,136 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 .mob-fab{color:var(--fire)}
 .mob-fab svg{stroke-width:2}
 @media(max-width:600px){.nav-mobile{display:block}}
+
+/* ═══════════ INICIO — Byny 2026 ═══════════ */
+.shell{max-width:1440px;margin:0 auto;padding:24px}
+.byny-head{position:sticky;top:0;z-index:20;background:rgba(244,246,248,.88);backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);margin:-24px -24px 20px}
+.byny-head-inner{max-width:1440px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.byny-brand{display:flex;align-items:baseline;gap:10px;flex-shrink:0}
+.byny-word{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.1;border-bottom:3px solid var(--leaf)}
+.byny-city{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.byny-tabs{display:flex;gap:2px;background:var(--surface3);border-radius:999px;padding:3px}
+.byny-tab{padding:7px 16px;border-radius:999px;font-size:13px;font-weight:500;border:none;background:transparent;
+  color:var(--ink2);cursor:pointer;font-family:inherit;transition:color 150ms,background 150ms}
+.byny-tab:hover:not(.on){color:var(--ink)}
+.byny-tab.on{background:var(--surface);font-weight:600;color:var(--ink);box-shadow:var(--shadow)}
+.byny-spacer{flex:1}
+.byny-sync{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2);white-space:nowrap;
+  max-width:190px;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:1330px){.byny-sync span:last-child{display:none}}
+@media(max-width:1120px){.byny-monthnav{display:none}}
+@media(max-width:760px){.byny-city{display:none}.byny-head-inner{gap:10px;padding:12px 16px}}
+.byny-dot{width:7px;height:7px;border-radius:50%;background:var(--leaf);animation:bynyPulse 2.4s infinite}
+.byny-period-wrap{position:relative}
+.byny-period{display:flex;gap:2px;background:var(--surface3);border-radius:8px;padding:3px}
+.byny-pbtn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap;border:none;
+  background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:background 150ms}
+.byny-pbtn.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.byny-picker{position:absolute;top:44px;right:0;z-index:40;width:320px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow3);padding:16px}
+.byny-monthnav{display:flex;align-items:center;gap:8px;transition:opacity 200ms}
+.byny-mbtn{width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:8px;
+  color:var(--ink2);cursor:pointer;font-family:inherit;font-size:14px;transition:all 150ms}
+.byny-mbtn:hover{border-color:var(--ink);color:var(--ink)}
+.byny-mlabel{font-size:13px;font-weight:600;min-width:104px;text-align:center}
+.byny-out{padding:7px 14px;border:1px solid var(--line);background:var(--surface);border-radius:8px;
+  font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
+.byny-out:hover{border-color:var(--ink);color:var(--ink)}
+
+.byny-fab{position:fixed;right:24px;bottom:24px;z-index:50;padding:14px 22px;background:var(--ink);color:#fff;
+  font-size:14px;font-weight:600;border:none;border-radius:999px;cursor:pointer;font-family:inherit;
+  box-shadow:0 8px 24px rgba(20,24,29,.24);transition:background 150ms var(--ease),transform 150ms var(--ease)}
+.byny-fab:hover{background:var(--leaf)}
+.byny-fab:active{transform:scale(.97)}
+.byny-fab-menu{position:fixed;right:24px;bottom:76px;z-index:50;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow3);overflow:hidden;min-width:190px}
+.byny-fab-menu button{display:block;width:100%;text-align:left;padding:12px 16px;border:none;background:none;
+  font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;border-bottom:1px solid var(--line2)}
+.byny-fab-menu button:last-child{border-bottom:none}
+.byny-fab-menu button:hover{background:var(--surface2)}
+
+.byny-shell{display:grid;gap:20px;align-items:start}
+@media(min-width:1180px){.byny-shell{grid-template-columns:minmax(0,1fr) 340px}
+  .byny-rail{position:sticky;top:84px}}
+.byny-main{display:grid;gap:16px;min-width:0}
+.byny-rail{display:grid;gap:16px;min-width:0}
+.byny-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;min-width:0}
+.byny-card-flush{padding:0;overflow:hidden}
+
+.byny-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.byny-kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 16px;cursor:pointer;min-width:0;
+  transition:transform 200ms var(--ease),box-shadow 200ms,border-color 150ms}
+.byny-kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
+.byny-kpi-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-height:22px}
+.byny-kpi-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);line-height:1.5;padding-top:2px}
+.byny-pill{font-size:10.5px;font-weight:700;padding:4px 8px;border-radius:999px;white-space:nowrap;flex:none;line-height:1}
+.byny-pill.good{background:var(--leaf-bg);color:var(--leaf-deep)}
+.byny-pill.bad{background:var(--fire-bg);color:var(--fire-deep)}
+.byny-kpi-val{font-size:27px;font-weight:700;letter-spacing:-.03em;margin:10px 0 4px}
+.byny-kpi-sub{font-size:11.5px;color:var(--ink2);line-height:1.45;min-height:32px}
+
+.byny-eq{display:grid;align-items:center;margin-top:14px;gap:8px}
+@media(min-width:900px){.byny-eq{grid-template-columns:1fr 20px 1fr 20px 1fr;gap:10px}}
+.byny-op{font-size:18px;font-weight:700;color:var(--ink4);text-align:center}
+@media(max-width:899px){.byny-op{display:none}}
+.byny-cell{border-radius:10px;padding:14px 16px}
+.byny-cell-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.byny-cell-val{font-size:24px;font-weight:700;letter-spacing:-.03em;margin-top:8px}
+.byny-cell-sub{font-size:11px;color:var(--ink2);margin-top:4px}
+.byny-cell.in{background:var(--leaf-surface);border:1px solid var(--leaf-line)}
+.byny-cell.in .byny-cell-lbl,.byny-cell.in .byny-cell-val{color:var(--leaf-deep)}
+.byny-cell.out{background:var(--fire-surface);border:1px solid var(--fire-line)}
+.byny-cell.out .byny-cell-lbl,.byny-cell.out .byny-cell-val{color:var(--fire-deep)}
+.byny-cell.net{background:var(--ink);color:#fff}
+.byny-cell.net .byny-cell-lbl{color:var(--dark-ink2)}
+.byny-cell.net .byny-cell-sub{color:var(--dark-ink2)}
+
+.byny-sharebar{height:12px;border-radius:999px;overflow:hidden;display:flex;gap:2px;background:var(--paper)}
+.byny-sharebar>span{transition:width 700ms var(--ease)}
+.byny-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 32px;margin-top:8px}
+.byny-legend-row{display:grid;grid-template-columns:8px minmax(0,1fr) auto 38px;gap:10px;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--divider)}
+.byny-chip{width:8px;height:8px;border-radius:2px}
+.byny-sec-title{font-size:12.5px;font-weight:600}
+.byny-hr{margin:18px 0 10px;padding-top:16px;border-top:1px solid var(--line2)}
+
+.byny-tt{position:absolute;top:6px;pointer-events:none;background:var(--ink);border-radius:8px;padding:10px 12px;
+  box-shadow:0 8px 24px rgba(20,24,29,.22);min-width:148px;z-index:5}
+
+.byny-toolbar{padding:16px 20px;border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.byny-fchip{padding:6px 11px;border-radius:999px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink2)}
+.byny-fchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.byny-search{width:200px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;
+  background:var(--surface2);font-family:inherit;color:var(--ink)}
+.byny-search:focus{outline:none;border-color:var(--leaf);background:var(--surface)}
+.byny-thead{padding:9px 20px;background:var(--surface2);border-bottom:1px solid var(--line2);
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.byny-row{padding:11px 20px;border-bottom:1px solid var(--divider);align-items:center;cursor:pointer;transition:background 150ms}
+.byny-row:hover{background:var(--surface2)}
+.byny-grid{display:grid;gap:10px;align-items:center;
+  grid-template-columns:88px minmax(90px,1.3fr) minmax(90px,1.4fr) 96px 132px 108px 96px}
+@media(max-width:1000px){.byny-grid{grid-template-columns:68px minmax(0,1fr) 84px 88px}
+  .byny-hide-narrow{display:none}}
+.byny-estado{padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:600;display:inline-block;white-space:nowrap}
+.byny-week{display:flex;gap:3px}
+.byny-day{width:12px;height:16px;border-radius:3px}
+.byny-tfoot{padding:12px 20px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+
+.byny-queue{background:var(--ink);border-radius:12px;padding:18px;color:#fff}
+.byny-q-item{background:var(--dark-surface);border:1px solid var(--dark-line);border-radius:8px;padding:11px 12px;
+  animation:bynyRise 300ms var(--ease) both}
+.byny-q-tag{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.byny-q-cta{padding:6px 12px;border-radius:6px;background:#fff;color:var(--ink);font-size:11.5px;font-weight:600;
+  border:none;cursor:pointer;font-family:inherit;transition:background 150ms,color 150ms}
+.byny-q-cta:hover{background:var(--leaf);color:#fff}
+.byny-q-cta:active{transform:scale(.97)}
+.byny-strip{display:flex;gap:4px;margin-top:16px}
+.byny-strip>div{flex:1;text-align:center}
+.byny-strip-bar{border-radius:4px 4px 2px 2px;background:var(--leaf-pale);transition:height 400ms var(--ease)}
+.byny-track{height:6px;background:var(--track);border-radius:999px;overflow:hidden}
+.byny-track>span{display:block;height:100%;background:var(--leaf);border-radius:999px;transition:width 600ms var(--ease)}
 
 /* ═══ SECTIONS ═══ */
 .sec{display:none}.sec.on{display:block}
@@ -600,68 +734,54 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 <div class="shell" id="admin-shell" style="display:none">
 
 <!-- ═══ TOPBAR ═══ -->
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-name">Byny Rental</span>
-    <span class="brand-sub">Medellín</span>
-    <span class="brand-ver">v4.4</span>
-  </div>
-  <div class="topbar-right">
-    <span class="date-chip" id="hdr-date"></span>
-    <span id="fb-status" style="font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--ink4)"></span>
-    <div style="position:relative">
-      <button class="btn solid" onclick="toggleQuickAdd()" id="quick-add-btn" style="padding:10px 18px;font-size:13px">+ Agregar ▾</button>
-      <div id="quick-add-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r2);min-width:160px;box-shadow:var(--shadow2);z-index:300;overflow:hidden">
-        <button onclick="openM('pay-modal');closeQuickAdd()" style="width:100%;padding:.75rem 1rem;text-align:left;background:none;border:none;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)">
-          <span style="font-size:15px">💳</span> Registrar pago
-        </button>
-        <button onclick="openM('exp-modal');closeQuickAdd()" style="width:100%;padding:.75rem 1rem;text-align:left;background:none;border:none;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px">
-          <span style="font-size:15px">💸</span> Registrar gasto
-        </button>
-      </div>
+<header class="byny-head">
+  <div class="byny-head-inner">
+    <div class="byny-brand">
+      <span class="byny-word">Byny</span>
+      <span class="byny-city">Medellín</span>
     </div>
-    <button class="btn" onclick="logoutAll()" style="padding:8px 14px;font-size:12px;font-weight:600">↪ Salir</button>
+    <nav class="byny-tabs">
+      <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
+      <button class="byny-tab" data-tab="motos" onclick="goTab('motos')">Motos</button>
+      <button class="byny-tab" data-tab="dinero" onclick="goTab('dinero')">Dinero</button>
+      <button class="byny-tab" data-tab="ajustes" onclick="goTab('ajustes')">Ajustes</button>
+    </nav>
+    <div class="byny-spacer"></div>
+    <div class="byny-sync"><span class="byny-dot" id="sync-dot"></span><span id="fb-status">Sincronizado</span></div>
+    <div class="byny-period-wrap">
+      <div class="byny-period" id="period-group"></div>
+      <div class="byny-picker" id="date-picker" style="display:none"></div>
+    </div>
+    <div class="byny-monthnav" id="month-nav">
+      <button class="byny-mbtn" onclick="chMonth(-1)">←</button>
+      <span class="byny-mlabel" id="month-lbl"></span>
+      <button class="byny-mbtn" onclick="chMonth(1)">→</button>
+    </div>
+    <button class="byny-out" onclick="logoutAll()">Salir</button>
   </div>
 </header>
 
-<!-- ═══ NAVEGACIÓN ═══ -->
-<nav class="nav-desktop">
-  <button class="nav-tab active" data-tab="dash" onclick="goTab('dash')">Inicio</button>
-  <button class="nav-tab" data-tab="motos" onclick="goTab('motos')">Motos</button>
-  <button class="nav-tab" data-tab="dinero" onclick="goTab('dinero')">Dinero</button>
-  <button class="nav-tab" data-tab="ajustes" onclick="goTab('ajustes')">Ajustes</button>
-</nav>
+<button class="byny-fab" onclick="toggleQuickAdd()" id="quick-add-btn">+ Agregar</button>
+<div id="quick-add-menu" class="byny-fab-menu" style="display:none">
+  <button onclick="openM('pay-modal');closeQuickAdd()">Registrar pago</button>
+  <button onclick="openM('exp-modal');closeQuickAdd()">Registrar gasto</button>
+  <button onclick="openM('retiro-modal');closeQuickAdd()">Registrar retiro</button>
+</div>
 
-<!-- ═══ INICIO ═══ -->
 <div id="dash" class="sec on">
   <div id="first-run"></div>
-  <div class="month-bar">
-    <button class="month-btn" onclick="chMonth(-1)">←</button>
-    <span class="month-label" id="month-lbl"></span>
-    <button class="month-btn" onclick="chMonth(1)">→</button>
-    <span style="font-size:10px;font-weight:600;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-left:.5rem" id="dash-date-range"></span>
-  </div>
-  <div id="dash-hero" class="dash-hero"></div>
-  <div id="dash-small" class="dash-small-grid"></div>
-  <div id="dash-alerts"></div>
-  <div id="backup-reminder"></div>
-  <div id="maint-alerts"></div>
-  <div id="pyp-info"></div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Semana actual — disponibilidad de motos</span></div>
-    <div id="weekly-schedule"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Ingresos por moto</span></div>
-    <div id="income-bars"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Gastos por categoría</span></div>
-    <div id="cat-bars"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Últimos movimientos</span></div>
-    <div id="recent-tx"></div>
+  <div class="byny-shell">
+    <div class="byny-main">
+      <div class="byny-kpis" id="kpi-row"></div>
+      <div class="byny-card" id="money-card"></div>
+      <div class="byny-card" id="flow-card"></div>
+      <div class="byny-card byny-card-flush" id="fleet-card"></div>
+    </div>
+    <aside class="byny-rail">
+      <div id="queue-card"></div>
+      <div class="byny-card" id="util-card"></div>
+      <div class="byny-card" id="top-card"></div>
+    </aside>
   </div>
 </div>
 
@@ -2044,7 +2164,7 @@ function activarModoLegado(){
 }
 
 function mostrarAvisoReglas(){
-  const el=document.getElementById('dash-alerts');
+  const el=document.getElementById('first-run');
   if(el&&!document.getElementById('aviso-reglas')){
     el.insertAdjacentHTML('afterbegin',
       `<div id="aviso-reglas" class="alert fire" style="margin-bottom:.5rem">
@@ -3766,32 +3886,11 @@ function renderFirstRun(){
   </div>`;
 }
 
-function renderLateAlerts(){
-  const el=document.getElementById('dash-alerts');if(!el)return;
-  const late=DB.bikes.filter(b=>b.renter&&calcBikeBalance(b)>0)
-                     .sort((a,b)=>calcBikeBalance(b)-calcBikeBalance(a));
-  if(!late.length){el.innerHTML='';return;}
-  el.innerHTML=late.map(b=>{
-    const bal=calcBikeBalance(b);
-    const days2=getBikeOwedDays(b);
-    const phone=telDeMoto(b);
-    const msg=encodeURIComponent(`Hola ${b.renter}, tienes pendiente ${fmt(bal)} (${days2} día${days2!==1?'s':''}) de arriendo. Por favor ponerse al día 🙏 — Byny Rental`);
-    return `<div class="alert fire" style="margin-bottom:.5rem">
-      <span><strong>${b.renter}</strong> debe ${fmt(bal)} · ${days2} día${days2!==1?'s':''} — ${b.name}</span>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        ${phone?`<a href="https://wa.me/${phone}?text=${msg}" target="_blank" class="btn sm" style="background:#25d366;color:#fff;border-color:#25d366">WhatsApp</a>`:''}
-        <button class="btn sm" onclick="openPayForBike('${b.id}')">Cobrar</button>
-      </div>
-    </div>`;
-  }).join('');
-}
 
 function render(){
-  document.getElementById('month-lbl').textContent=mName(VM,VY);
-  const dr=document.getElementById('dash-date-range');
-  if(dr){const fd=new Date(VY,VM,1);const ld=new Date(VY,VM+1,0);dr.textContent=`${fd.toLocaleDateString('es-CO',{day:'2-digit',month:'short'})} — ${ld.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'})}`;}
-  renderFirstRun();renderAdmin();renderLateAlerts();renderKPIs();renderDocAlerts();renderMaintAlerts();renderPYPInfo();renderWeeklySchedule();renderBackupReminder();
-  renderIncomeBars();renderCatBars();renderRecentTx();
+  const ml=document.getElementById('month-lbl');if(ml)ml.textContent=mName(VM,VY);
+  renderFirstRun();renderAdmin();
+  renderInicio();
   renderBikes();renderAllTx();renderExpenses();renderCatFilterPills();
   renderFinance();
   renderPieChart();
@@ -3814,333 +3913,614 @@ function mesEsFuturo(){
   return primero>new Date(hoy.getFullYear(),hoy.getMonth()+1,0);
 }
 
-function renderKPIs(){
-  const el=document.getElementById('dash-hero');if(!el)return;
-  const elSmall=document.getElementById('dash-small');
-  const pays=getMonthlyPayments(VM,VY);
-  let exps;
-  if(expFrom||expTo){
-    exps=DB.expenses.filter(e=>(!expFrom||e.date>=expFrom)&&(!expTo||e.date<=expTo));
-  }else{
-    exps=DB.expenses.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
-  }
-  const rets=DB.retiros.filter(r=>{const d=new Date(r.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
-  const income=pays.reduce((s,p)=>s+Number(p.amount||0),0);
-  const expenses=exps.reduce((s,e)=>s+e.amount,0);
-  const retiros=rets.reduce((s,r)=>s+r.amount,0);
-  const ganancia=income-expenses;
-  const caja=ganancia-retiros;
-  const corte=cierreDelMesVisto();
-  const owed=DB.bikes.reduce((s,b)=>s+Math.max(0,calcBikeBalance(b,corte)),0);
-  let totalBillable=0,totalPaidDays=0;
-  const totalDaysM=daysInMonth(VM,VY);
-  DB.bikes.filter(b=>b.renter).forEach(b=>{
-    let ledger={};
-    try{const r=buildDayLedger(b.id);ledger=r.ledger||{};}catch(e){}
-    for(let d=1;d<=totalDaysM;d++){
-      const ds=`${VY}-${String(VM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      if(isPYP(ds,b.plateDigit)||(DB.graceDays||[]).find(g=>g.bikeId===b.id&&g.date===ds))continue;
-      totalBillable++;
-      if(ledger[ds]?.status==='paid')totalPaidDays++;
-      else if(ledger[ds]?.status==='partial'){
-        const rate=getBikeRateForDate(b,ds);
-        totalPaidDays+=Math.min(1,(Number(ledger[ds].amount)||0)/rate);
-      }
-    }
-  });
-  const active=DB.bikes.filter(b=>b.renter).length;
-  // Expected month-end net = recorded income + remaining billable rental days - recorded and projected recurring expenses.
-  const todayDate=todayCODate();
-  const daysInM=daysInMonth(VM,VY);
-  let expectedRemainingIncome=0,remainingDaysForAvg=0;
-  if(VM===todayDate.getMonth()&&VY===todayDate.getFullYear()){
-    DB.bikes.filter(b=>b.renter).forEach(b=>{
-      for(let d=todayDate.getDate()+1;d<=daysInM;d++){
-        const ds=`${VY}-${String(VM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        if(isPYP(ds,b.plateDigit)||(DB.graceDays||[]).find(g=>g.bikeId===b.id&&g.date===ds))continue;
-        expectedRemainingIncome+=getBikeRateForDate(b,ds);
-        remainingDaysForAvg++;
-      }
-    });
-  }
-  const projectedRecurringExpenses=Math.round(recurringExpenseDailyAverage()*remainingDaysForAvg);
-  const projectedTotal=income+expectedRemainingIncome-expenses-projectedRecurringExpenses;
-  // All-time caja
-  const hasta=d=>d&&d<=corte;
-  const allIncome=DB.payments.filter(p=>hasta(p.date)).reduce((s,p)=>s+Number(p.amount),0);
-  const allExp=DB.expenses.filter(e=>hasta(e.date)).reduce((s,e)=>s+Number(e.amount),0);
-  const allRetiros=DB.retiros.filter(r=>hasta(r.date)).reduce((s,r)=>s+Number(r.amount),0);
-  const cajaAllTime=allIncome-allExp-allRetiros;
+// ═══════════════════════════════════════════════════════════════
+// INICIO — libro diario
+// ═══════════════════════════════════════════════════════════════
+// Todo lo que muestra el tablero sale de ESTA función: caja, neto, mora,
+// utilización y la gráfica son vistas distintas de las mismas filas, así que
+// no pueden contradecirse entre sí.
 
-  // Utilization — days elapsed so far this month only
-  let elapsedBillable=0,elapsedPaidDays=0;
-  const isCurrentMonth=VM===todayDate.getMonth()&&VY===todayDate.getFullYear();
-  const selectedMonthStart=new Date(VY,VM,1);
-  const currentMonthStart=new Date(todayDate.getFullYear(),todayDate.getMonth(),1);
-  const todayDay=isCurrentMonth?todayDate.getDate():(selectedMonthStart<currentMonthStart?daysInM:0);
-  DB.bikes.filter(b=>b.renter).forEach(b=>{
-    let ledger={};
-    try{const r=buildDayLedger(b.id);ledger=r.ledger||{};}catch(e){}
-    for(let d=1;d<=todayDay;d++){
-      const ds=`${VY}-${String(VM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      if(isPYP(ds,b.plateDigit)||(DB.graceDays||[]).find(g=>g.bikeId===b.id&&g.date===ds))continue;
-      elapsedBillable++;
-      if(ledger[ds]?.status==='paid')elapsedPaidDays++;
-      else if(ledger[ds]?.status==='partial'){
-        const rate2=getBikeRateForDate(b,ds);
-        elapsedPaidDays+=Math.min(1,(Number(ledger[ds].amount)||0)/rate2);
-      }
-    }
-  });
-  const utilElapsed=elapsedBillable>0?Math.round(elapsedPaidDays/elapsedBillable*100):0;
-
-  const owedDaysTotal=DB.bikes.reduce((s,b)=>s+(b.renter?getBikeOwedDays(b,corte):0),0);
-  // Deja claro a qué fecha están las cifras acumuladas.
-  const esMesActual=corte===tod();
-  const alCorte=esMesActual?'hasta hoy':'al '+fmtD(corte);
-  el.innerHTML=`
-    <div class="dash-hero-card">
-      <div class="dash-hero-label">En caja</div>
-      <div class="dash-hero-val ${cajaAllTime>=0?'green':'red'}">${fmt(cajaAllTime)}</div>
-      <div class="dash-hero-sub">Ingresos - gastos - retiros, ${alCorte}</div>
-    </div>
-    <div class="dash-hero-card warn">
-      <div class="dash-hero-label">Por cobrar</div>
-      <div class="dash-hero-val red">${fmt(owed)}</div>
-      <div class="dash-hero-sub">${owed>0?'= '+owedDaysTotal+'d pendientes '+alCorte:'Al día ✓ '+alCorte}</div>
-    </div>
-    <div class="dash-hero-card sky">
-      <div class="dash-hero-label">Ganancia del mes</div>
-      <div class="dash-hero-val ${ganancia>=0?'green':'red'}">${fmt(ganancia)}</div>
-      <div class="dash-hero-sub">${fmt(income)} ingresos · ${fmt(expenses)} gastos</div>
-    </div>
-  `;
-  if(elSmall)elSmall.innerHTML=`
-    <div class="dash-small" style="background:var(--sky-bg);border:1px solid var(--sky-line)"><span class="dash-small-label" style="color:var(--sky)">Esperado fin de mes</span><div class="dash-small-val" style="color:${projectedTotal>=0?'var(--sky)':'var(--fire)'}">${fmt(projectedTotal)}</div><div class="dash-small-sub">+${fmt(expectedRemainingIncome)} arriendo · -${fmt(projectedRecurringExpenses)} gasto prom.</div></div>
-    <div class="dash-small"><span class="dash-small-label">Ingresos</span><div class="dash-small-val">${fmt(income)}</div></div>
-    <div class="dash-small"><span class="dash-small-label">Utilización</span><div class="dash-small-val">${utilElapsed}%</div><div class="dash-small-sub">días transcurridos</div></div>
-    <div class="dash-small"><span class="dash-small-label">Motos activas</span><div class="dash-small-val">${active}/${DB.bikes.length}</div></div>
-  `;
+// Las ~16 categorías de gasto de la app se agrupan en los 5 grupos del diseño.
+const GRUPOS_GASTO={
+  mant:{label:'Mantenimiento',color:'#E8452B',
+        cats:['programado','aceite','llantas','frenos','revision','cadena','bujia','filtro','bateria','reparacion','mantenimiento']},
+  seguros:{label:'SOAT y seguros',color:'#F0A400',cats:['soat','tecnica']},
+  parq:{label:'Parqueadero',color:'#A98BFF',cats:['parqueadero']},
+  multas:{label:'Multas y trámites',color:'#5CC8FF',cats:['multas','documentacion']},
+  otros:{label:'Otros',color:'#9AA5AE',cats:['misc','otros']}
+};
+function grupoDeGasto(cat){
+  for(const k of Object.keys(GRUPOS_GASTO))if(GRUPOS_GASTO[k].cats.includes(cat))return k;
+  return 'otros';
 }
+
+const PERIODOS=[{key:'mes',label:'Este mes'},{key:'7',label:'7d'},{key:'30',label:'30d'},
+                {key:'90',label:'90d'},{key:'365',label:'12m'},{key:'custom',label:'Fechas'}];
+let periodo='mes', pDesde='', pHasta='', pickerAbierto=false, hoverBucket=null, colaHecha=[];
+let filtroFlota='todas', buscaFlota='';
+
+function isoDe(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function sumaDias(iso,n){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return isoDe(d);}
+function diasEntre(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)+1;}
+
+// Ventana [desde,hasta] del periodo activo.
+function ventana(){
+  const hoy=tod();
+  if(periodo==='mes'){
+    const d=new Date(hoy+'T12:00:00');
+    return [isoDe(new Date(d.getFullYear(),d.getMonth(),1)),hoy];
+  }
+  if(periodo==='custom'&&pDesde&&pHasta)return [pDesde<=pHasta?pDesde:pHasta,pDesde<=pHasta?pHasta:pDesde];
+  const n=parseInt(periodo)||30;
+  return [sumaDias(hoy,-(n-1)),hoy];
+}
+
+// Una fila por día del rango. `desdeCero` arranca la caja en 0 (no hay saldo inicial).
+function construirLedger(desde,hasta){
+  const filas=[];
+  const pagos={},gastos={},retiros={};
+  (DB.payments||[]).forEach(p=>{if(!p.date)return;(pagos[p.date]=pagos[p.date]||[]).push(p);});
+  (DB.expenses||[]).forEach(e=>{if(!e.date)return;(gastos[e.date]=gastos[e.date]||[]).push(e);});
+  (DB.retiros||[]).forEach(r=>{if(!r.date)return;(retiros[r.date]=retiros[r.date]||[]).push(r);});
+
+  // Caja acumulada desde el primer movimiento registrado, no sólo desde `desde`.
+  let acum=0;
+  const todas=[...Object.keys(pagos),...Object.keys(gastos),...Object.keys(retiros)].sort();
+  const primero=todas.length?todas[0]:desde;
+  const arranque=primero<desde?primero:desde;
+
+  const ledgers={};
+  (DB.bikes||[]).forEach(b=>{try{ledgers[b.id]=buildDayLedger(b.id).ledger||{};}catch(e){ledgers[b.id]={};}});
+
+  for(let ds=arranque; ds<=hasta; ds=sumaDias(ds,1)){
+    const ing=(pagos[ds]||[]).reduce((s,p)=>s+Number(p.amount||0),0);
+    const gs=(gastos[ds]||[]);
+    const gasto=gs.reduce((s,e)=>s+Number(e.amount||0),0);
+    const g={mant:0,seguros:0,parq:0,multas:0,otros:0};
+    gs.forEach(e=>{g[grupoDeGasto(e.cat)]+=Number(e.amount||0);});
+    const ret=(retiros[ds]||[]).reduce((s,r)=>s+Number(r.amount||0),0);
+    acum+=ing-gasto-ret;
+
+    if(ds<desde)continue;   // se acumula pero no se muestra
+
+    // Motos rodando ese día: con arrendatario y ya iniciadas.
+    const activas=(DB.bikes||[]).filter(b=>b.renter&&b.startDate&&b.startDate<=ds);
+    const size=(DB.bikes||[]).filter(b=>!b.startDate||b.startDate<=ds).length;
+    // Mora: días facturables sin pagar hasta esa fecha.
+    let mora=0;
+    (DB.bikes||[]).forEach(b=>{
+      const L=ledgers[b.id]||{};
+      Object.keys(L).forEach(d2=>{
+        if(d2>ds)return;
+        const day=L[d2];
+        if(day.status==='unpaid')mora+=(day.rate||Number(b.rate)||DR);
+        else if(day.status==='partial')mora+=((day.rate||Number(b.rate)||DR)-(day.amount||0));
+      });
+    });
+    filas.push({date:ds,ingreso:ing,gasto,g,retiro:ret,
+                rentadas:activas.length,size,mora,acum,
+                util:size?activas.length/size:0});
+  }
+  return filas;
+}
+
+// ── formato es-CO del handoff ──
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MESC=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+function money(n){return '$ '+Math.round(Number(n)||0).toLocaleString('es-CO');}
+function moneyK(n){const a=Math.abs(n);
+  if(a>=1e6)return '$'+(n/1e6).toFixed(1).replace('.',',')+'M';
+  if(a>=1000)return '$'+Math.round(n/1000)+'k';return '$'+Math.round(n);}
+function pct(n){const s=n<0?'−':'+';return s+Math.abs(n*100).toFixed(1).replace('.',',')+'%';}
+function dLabel(iso){const d=new Date(iso+'T12:00:00');return d.getDate()+' '+MESC[d.getMonth()];}
+function diaSemana(iso){return (new Date(iso+'T12:00:00').getDay()+6)%7;}
+
+// Catmull-Rom emitido como béziers cúbicas (del prototipo del diseño).
+function smooth(pts,tension){
+  if(pts.length<2)return pts.length?'M'+pts[0][0]+' '+pts[0][1]:'';
+  const t=tension===undefined?0.85:tension;
+  let d='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1);
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+    const c1x=p1[0]+((p2[0]-p0[0])/6)*t,c1y=p1[1]+((p2[1]-p0[1])/6)*t;
+    const c2x=p2[0]-((p3[0]-p1[0])/6)*t,c2y=p2[1]-((p3[1]-p1[1])/6)*t;
+    d+=' C'+c1x.toFixed(1)+' '+c1y.toFixed(1)+' '+c2x.toFixed(1)+' '+c2y.toFixed(1)+' '+p2[0].toFixed(1)+' '+p2[1].toFixed(1);
+  }
+  return d;
+}
+function spark(vals,w,h){
+  if(!vals.length)return{line:'',area:'',last:[0,h]};
+  const min=Math.min.apply(null,vals),max=Math.max.apply(null,vals),span=max-min||1;
+  const pts=vals.map((v,i)=>[i*(w/Math.max(1,vals.length-1)),h-3-((v-min)/span)*(h-8)]);
+  const line=smooth(pts,0.7);
+  return{line,area:line+' L'+w+' '+h+' L0 '+h+' Z',last:pts[pts.length-1]};
+}
+
+function etiquetaPeriodo(){
+  const [a,b]=ventana();
+  if(periodo==='mes')return MESES[new Date(b+'T12:00:00').getMonth()];
+  if(periodo==='custom')return dLabel(a)+' a '+dLabel(b);
+  return diasEntre(a,b)+' días';
+}
+
+// Estado de cada moto hoy, usado por la tabla, el donut y los chips.
+function estadoFlota(){
+  return (DB.bikes||[]).map(b=>{
+    const debe=b.renter&&b.startDate?Math.max(0,calcBikeBalance(b)):0;
+    let estado='libre';
+    if(b.enTaller)estado='taller';
+    else if(debe>0)estado='mora';
+    else if(b.renter&&b.startDate)estado='rentada';
+    let L={};try{L=(buildDayLedger(b.id)||{}).ledger||{};}catch(e){}
+    const hoy=tod(), lunes=sumaDias(hoy,-diaSemana(hoy));
+    const week=[];
+    for(let i=0;i<7;i++){
+      const ds=sumaDias(lunes,i);
+      const day=L[ds];
+      if(!b.renter||!b.startDate||ds<b.startDate||ds>hoy)week.push({e:'off',ds});
+      else if(!day)week.push({e:'off',ds});
+      else if(day.status==='pyp')week.push({e:'pyp',ds});
+      else if(day.status==='grace')week.push({e:'gracia',ds});
+      else if(day.status==='paid')week.push({e:'pago',ds});
+      else week.push({e:'pendiente',ds});
+    }
+    const mesIni=tod().slice(0,7);
+    const mes=(DB.payments||[]).filter(p=>p.bikeId===b.id&&(p.date||'').startsWith(mesIni))
+                               .reduce((s,p)=>s+Number(p.amount||0),0);
+    return{id:b.id,placa:b.name||'—',modelo:b.engine||b.color||'—',
+           cliente:b.renter||null,estado,week,mes,debe,tarifa:Number(b.rate)||DR};
+  });
+}
+const COLOR_DIA={pago:'var(--leaf)',gracia:'var(--sun-pale)',pyp:'var(--fire-pale)',
+                 pendiente:'var(--fire)',off:'var(--empty-day)'};
+const NOMBRE_DIA={pago:'Pagó',gracia:'Gracia',pyp:'Pico y placa',pendiente:'Pendiente',off:'Sin rentar'};
+const ESTADO_PILL={rentada:['var(--leaf-bg)','var(--leaf-deep)','Rentada'],
+                   libre:['var(--dust-bg)','var(--ink2)','Libre'],
+                   taller:['var(--sun-bg)','var(--sun-text)','Taller'],
+                   mora:['var(--fire-bg)','var(--fire-deep)','En mora']};
+
+// ═══════════ INICIO — pintado ═══════════
+function renderInicio(){
+  if(!document.getElementById('kpi-row'))return;
+  const [desde,hasta]=ventana();
+  const cur=construirLedger(desde,hasta);
+  const nDias=diasEntre(desde,hasta);
+  const prevHasta=sumaDias(desde,-1), prevDesde=sumaDias(prevHasta,-(nDias-1));
+  const prev=construirLedger(prevDesde,prevHasta);
+
+  const sum=(a,k)=>a.reduce((s,d)=>s+d[k],0);
+  const entrada=sum(cur,'ingreso'), salida=sum(cur,'gasto'), retiros=sum(cur,'retiro');
+  const neto=entrada-salida;
+  const pNeto=sum(prev,'ingreso')-sum(prev,'gasto');
+  const caja=cur.length?cur[cur.length-1].acum:0;
+  const cajaIni=cur.length?cur[0].acum-(cur[0].ingreso-cur[0].gasto-cur[0].retiro):0;
+  const porCobrar=cur.length?cur[cur.length-1].mora:0;
+  const moraIni=cur.length?cur[0].mora:0;
+  const utilProm=cur.length?cur.reduce((s,d)=>s+d.util,0)/cur.length:0;
+  const pUtil=prev.length?prev.reduce((s,d)=>s+d.util,0)/prev.length:0;
+  const utilHoy=cur.length?cur[cur.length-1].util:0;
+
+  renderPeriodo();
+  renderKpis({cur,caja,cajaIni,retiros,neto,pNeto,entrada,salida,porCobrar,moraIni,utilProm,pUtil,utilHoy,nDias});
+  renderMoney({desde,hasta,nDias,entrada,salida,neto,cur,prev,pNeto});
+  renderFlujo(cur,nDias,desde,hasta);
+  renderFlota();
+  renderCola();
+  renderUtil(cur,utilHoy);
+  renderTop();
+}
+
+function renderPeriodo(){
+  const g=document.getElementById('period-group');
+  if(g)g.innerHTML=PERIODOS.map(p=>
+    `<button class="byny-pbtn${periodo===p.key?' on':''}" onclick="setPeriodo('${p.key}')">${p.label}</button>`).join('');
+  const mn=document.getElementById('month-nav');
+  if(mn)mn.style.opacity=periodo==='mes'?1:.4;
+  const lbl=document.getElementById('month-lbl');
+  if(lbl){const d=new Date(tod()+'T12:00:00');lbl.textContent=MESES[VM]+' '+VY;}
+  renderPicker();
+}
+
+function setPeriodo(k){
+  if(k==='custom'){
+    pickerAbierto=!(periodo==='custom'&&pickerAbierto);
+    if(!pDesde){const [a,b]=ventana();pDesde=a;pHasta=b;}
+  }else pickerAbierto=false;
+  periodo=k; hoverBucket=null;
+  try{localStorage.setItem('byny_periodo',k);}catch(e){}
+  renderInicio();
+}
+
+function renderPicker(){
+  const el=document.getElementById('date-picker');if(!el)return;
+  if(!pickerAbierto){el.style.display='none';return;}
+  const [a,b]=ventana();
+  el.style.display='block';
+  el.innerHTML=`
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px">Rango de fechas</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div style="font-size:11px;color:var(--ink2);margin-bottom:4px">Desde</div>
+        <input type="date" value="${a}" max="${b}" onchange="pDesde=this.value;renderInicio()"
+          style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;font-family:inherit"></div>
+      <div><div style="font-size:11px;color:var(--ink2);margin-bottom:4px">Hasta</div>
+        <input type="date" value="${b}" min="${a}" max="${tod()}" onchange="pHasta=this.value;renderInicio()"
+          style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;font-family:inherit"></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+      ${[['Mes pasado','mesPasado'],['Trimestre','trimestre'],['Año en curso','anio']].map(([t,k])=>
+        `<button onclick="presetRango('${k}')" style="padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;color:var(--ink2);background:none;cursor:pointer;font-family:inherit">${t}</button>`).join('')}
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+      <span style="font-size:11.5px;color:var(--ink2)">${diasEntre(a,b)} días seleccionados</span>
+      <button onclick="pickerAbierto=false;renderInicio()" style="padding:7px 14px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Listo</button>
+    </div>`;
+}
+
+function presetRango(k){
+  const h=new Date(tod()+'T12:00:00');
+  if(k==='mesPasado'){pDesde=isoDe(new Date(h.getFullYear(),h.getMonth()-1,1));pHasta=isoDe(new Date(h.getFullYear(),h.getMonth(),0));}
+  if(k==='trimestre'){pDesde=isoDe(new Date(h.getFullYear(),h.getMonth()-2,1));pHasta=tod();}
+  if(k==='anio'){pDesde=isoDe(new Date(h.getFullYear(),0,1));pHasta=tod();}
+  periodo='custom';renderInicio();
+}
+
+// base = valor del periodo anterior. Sin base no hay porcentaje que mostrar:
+// dividir entre cero producía cosas como "+2.500.000,0%".
+function kpiCard(lbl,val,sub,tone,fill,serie,actual,base,subeEsBueno){
+  const s=spark(serie.length?serie:[0,0],220,34);
+  let pill='';
+  if(base&&isFinite(base)&&isFinite(actual)&&serie.length>1){
+    const delta=(actual-base)/Math.abs(base);
+    if(isFinite(delta)&&Math.abs(delta)<100){
+      const bueno=subeEsBueno?delta>=0:delta<=0;
+      pill=`<span class="byny-pill ${bueno?'good':'bad'}">${pct(delta)}</span>`;
+    }
+  }
+  return `<div class="byny-kpi">
+    <div class="byny-kpi-top"><span class="byny-kpi-lbl">${lbl}</span>${pill}</div>
+    <div class="byny-kpi-val" style="color:${tone}">${val}</div>
+    <div class="byny-kpi-sub">${sub}</div>
+    <svg viewBox="0 0 220 34" preserveAspectRatio="none" style="height:30px;width:100%;margin-top:4px;overflow:visible">
+      <path d="${s.area}" fill="${fill}"/>
+      <path d="${s.line}" fill="none" stroke="${tone}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${s.last[0].toFixed(1)}" cy="${s.last[1].toFixed(1)}" r="2.8" fill="${tone}"/>
+    </svg></div>`;
+}
+
+function renderKpis(m){
+  const el=document.getElementById('kpi-row');if(!el)return;
+  const enPeriodo=periodo==='mes'?'este mes':'en el periodo';
+  const mora=estadoFlota().filter(f=>f.debe>0).length;
+  el.innerHTML=
+    kpiCard('En caja',money(m.caja),`Hasta hoy · ${money(m.retiros)} en retiros ${enPeriodo}`,
+            'var(--ink)','rgba(20,24,29,.06)',m.cur.map(d=>d.acum),m.caja,m.cajaIni,true)+
+    kpiCard(periodo==='mes'?'Neto de '+MESES[new Date(tod()+'T12:00:00').getMonth()]:'Neto · '+m.nDias+'d',
+            money(m.neto),`${money(m.entrada)} entrada · ${money(m.salida)} salida`,
+            'var(--leaf)','rgba(14,159,133,.10)',
+            (()=>{let r=0;return m.cur.map(d=>r+=d.ingreso-d.gasto);})(),m.neto,m.pNeto,true)+
+    kpiCard('Por cobrar',money(m.porCobrar),
+            mora?`${mora} ${mora===1?'cliente':'clientes'} en mora`:'Nadie en mora',
+            'var(--fire)','rgba(232,69,43,.08)',m.cur.map(d=>d.mora),m.porCobrar,m.moraIni,false)+
+    kpiCard('Utilización',Math.round(m.utilProm*100)+'%',
+            `Promedio de ${etiquetaPeriodo()} · hoy ${Math.round(m.utilHoy*100)}%`,
+            'var(--ink)','rgba(20,24,29,.06)',m.cur.map(d=>d.util),m.utilProm,m.pUtil,true);
+}
+
+function renderMoney(m){
+  const el=document.getElementById('money-card');if(!el)return;
+  const titulo=periodo==='mes'?'Neto de '+MESES[new Date(tod()+'T12:00:00').getMonth()]
+              :periodo==='custom'?'Neto del rango':'Neto de los últimos '+m.nDias+' días';
+  const pEnt=m.prev.reduce((s,d)=>s+d.ingreso,0), pSal=m.prev.reduce((s,d)=>s+d.gasto,0);
+  const vs=(a,b)=>b?pct((a-b)/Math.abs(b)):'—';
+  const margen=m.entrada?Math.round(m.neto/m.entrada*100):0;
+  const pctSal=m.entrada?Math.round(m.salida/m.entrada*100):0;
+
+  const grupos=Object.keys(GRUPOS_GASTO).map(k=>({k,...GRUPOS_GASTO[k],
+      total:m.cur.reduce((s,d)=>s+d.g[k],0)})).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
+  const totalG=grupos.reduce((s,x)=>s+x.total,0);
+  const promDia=m.nDias?m.salida/m.nDias:0;
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <span style="font-size:14px;font-weight:600">${titulo}</span>
+      <span style="font-size:11.5px;color:var(--ink2)">${dLabel(m.desde)} — ${dLabel(m.hasta)} · ${m.nDias} días</span>
+    </div>
+    <div class="byny-eq">
+      <div class="byny-cell in"><div class="byny-cell-lbl">Entrada</div>
+        <div class="byny-cell-val">${money(m.entrada)}</div>
+        <div class="byny-cell-sub">Arriendos cobrados · ${vs(m.entrada,pEnt)} vs periodo anterior</div></div>
+      <div class="byny-op">−</div>
+      <div class="byny-cell out"><div class="byny-cell-lbl">Salida</div>
+        <div class="byny-cell-val">${money(m.salida)}</div>
+        <div class="byny-cell-sub">${pctSal}% de la entrada · ${vs(m.salida,pSal)} vs periodo anterior</div></div>
+      <div class="byny-op">=</div>
+      <div class="byny-cell net"><div class="byny-cell-lbl">Neto</div>
+        <div class="byny-cell-val">${money(m.neto)}</div>
+        <div class="byny-cell-sub">Margen del ${margen}% · ${vs(m.neto,m.pNeto)} vs periodo anterior</div></div>
+    </div>
+    ${totalG?`
+    <div class="byny-hr" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+      <span class="byny-sec-title">En qué se fue la salida</span>
+      <span style="font-size:11px;color:var(--ink2)">${money(promDia)} promedio al día</span>
+    </div>
+    <div class="byny-sharebar">
+      ${grupos.map(g=>`<span style="width:${(g.total/totalG*100).toFixed(1)}%;background:${g.color}"></span>`).join('')}
+    </div>
+    <div class="byny-legend">
+      ${grupos.map(g=>`<div class="byny-legend-row">
+        <span class="byny-chip" style="background:${g.color}"></span>
+        <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.label}</span>
+        <span style="font-size:12px;font-weight:600;text-align:right;white-space:nowrap">${money(g.total)}</span>
+        <span style="font-size:11px;color:var(--ink3);text-align:right">${Math.round(g.total/totalG*100)}%</span>
+      </div>`).join('')}
+    </div>`:`
+    <div class="byny-hr" style="font-size:12px;color:var(--ink2)">Sin gastos registrados en este periodo.</div>`}`;
+}
+
+function renderFlujo(cur,nDias,desde,hasta){
+  const el=document.getElementById('flow-card');if(!el)return;
+  const grain=nDias<=35?'dia':nDias<=130?'semana':'mes';
+  const buckets=[];
+  cur.forEach(d=>{
+    let key,label;
+    const f=new Date(d.date+'T12:00:00');
+    if(grain==='dia'){key=d.date;label=dLabel(d.date);}
+    else if(grain==='semana'){const mon=sumaDias(d.date,-diaSemana(d.date));key=mon;label='Semana del '+dLabel(mon);}
+    else{key=d.date.slice(0,7);label=MESES[f.getMonth()]+' '+String(f.getFullYear()).slice(2);}
+    const last=buckets[buckets.length-1];
+    if(last&&last.key===key){last.ingreso+=d.ingreso;last.gasto+=d.gasto;last.retiro+=d.retiro;last.acum=d.acum;}
+    else buckets.push({key,label,ingreso:d.ingreso,gasto:d.gasto,retiro:d.retiro,acum:d.acum});
+  });
+  const W=720,H=210,PAD=24;
+  const maxFlow=Math.max(1,...buckets.map(b=>Math.max(b.ingreso,b.gasto)));
+  const slot=(W-PAD)/Math.max(1,buckets.length);
+  const bw=Math.max(2,Math.min(16,slot*0.32));
+  const accs=buckets.map(b=>b.acum);
+  const aMin=Math.min(0,...accs),aMax=Math.max(1,...accs),aSpan=aMax-aMin||1;
+  const yAcum=v=>24+(1-(v-aMin)/aSpan)*(H-74);
+  const pts=buckets.map((b,i)=>[PAD+i*slot+slot/2,yAcum(b.acum)]);
+  const grano=grain==='dia'?'barras por día':grain==='semana'?'barras por semana':'barras por mes';
+
+  const barras=buckets.map((b,i)=>{
+    const x=PAD+i*slot+(slot-bw*2-2)/2;
+    const inH=(b.ingreso/maxFlow)*(H-30), exH=(b.gasto/maxFlow)*(H-30);
+    const op=hoverBucket===null||hoverBucket===i?1:0.34;
+    return `<rect x="${x.toFixed(1)}" y="${(H-inH).toFixed(1)}" width="${bw.toFixed(1)}" height="${inH.toFixed(1)}" rx="1.5" fill="var(--leaf)" opacity="${op}"/>
+            <rect x="${(x+bw+2).toFixed(1)}" y="${(H-exH).toFixed(1)}" width="${bw.toFixed(1)}" height="${exH.toFixed(1)}" rx="1.5" fill="var(--fire)" opacity="${op}"/>`;
+  }).join('');
+  const hits=buckets.map((b,i)=>
+    `<rect x="${(PAD+i*slot).toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${H}"
+       fill="${hoverBucket===i?'rgba(20,24,29,.035)':'transparent'}"
+       onmouseenter="hoverBucket=${i};renderInicio()"/>`).join('');
+  const marcas=buckets.map((b,i)=>{
+    if(!b.retiro)return '';
+    const [x,y]=pts[i];
+    return `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x.toFixed(1)}" y2="208" stroke="var(--violet)" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="var(--violet)" stroke="#fff" stroke-width="1.5"/>
+            <text x="${x.toFixed(1)}" y="${(y-12).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--violet-text)">−${moneyK(b.retiro)}</text>`;
+  }).join('');
+  const grid=[0,1,2,3].map(i=>{const y=18+i*60;const v=aMin+(1-(y-24)/(H-74))*aSpan;
+    return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="var(--line2)" stroke-width="1"/>
+            <text x="2" y="${y-4}" font-size="9" fill="var(--ink3)">${moneyK(v)}</text>`;}).join('');
+
+  let tip='';
+  if(hoverBucket!==null&&buckets[hoverBucket]){
+    const b=buckets[hoverBucket];
+    const leftPct=Math.max(2,Math.min(76,((PAD+hoverBucket*slot+slot/2)/W)*100));
+    tip=`<div class="byny-tt" style="left:${leftPct.toFixed(1)}%">
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)">${b.label}</div>
+      <div style="font-size:12px;color:#fff;margin-top:6px">+${money(b.ingreso)}</div>
+      <div style="font-size:12px;color:#FF9C86">−${money(b.gasto)}</div>
+      <div style="font-size:12px;color:#C4AEFF">${b.retiro?'Retiro '+money(b.retiro):'Sin retiros'}</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid #2A3138">En caja ${money(b.acum)}</div>
+    </div>`;
+  }
+
+  el.style.padding='18px 20px 8px';
+  el.innerHTML=`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div><div style="font-size:14px;font-weight:600">Flujo de caja</div>
+        <div style="font-size:11.5px;color:var(--ink2);margin-top:2px">${dLabel(desde)} — ${dLabel(hasta)} · ${nDias} días · ${grano} · la línea es la caja después de retiros</div></div>
+      <div style="display:flex;gap:14px;font-size:11px;color:var(--ink2);flex-wrap:wrap">
+        <span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--leaf);margin-right:5px"></i>Ingresos</span>
+        <span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--fire);margin-right:5px"></i>Gastos</span>
+        <span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--violet);margin-right:5px"></i>Retiros</span>
+        <span><i style="display:inline-block;width:14px;height:2px;background:var(--ink);margin-right:5px;vertical-align:middle"></i>Acumulado</span>
+      </div>
+    </div>
+    <div style="position:relative;margin-top:10px" onmouseleave="hoverBucket=null;renderInicio()">
+      ${tip}
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:210px;width:100%;display:block">
+        ${grid}${barras}
+        <path d="${smooth(pts,0.85)}" fill="none" stroke="var(--ink)" stroke-width="2"
+              stroke-dasharray="1200" style="animation:bynyDraw 1.1s var(--ease) forwards"/>
+        ${marcas}${hits}
+      </svg>
+    </div>`;
+}
+
+function renderFlota(){
+  const el=document.getElementById('fleet-card');if(!el)return;
+  const todas=estadoFlota();
+  const cuenta={todas:todas.length,rentada:0,libre:0,taller:0,mora:0};
+  todas.forEach(f=>cuenta[f.estado]++);
+  const q=buscaFlota.trim().toLowerCase();
+  let filas=todas.filter(f=>filtroFlota==='todas'||f.estado===filtroFlota);
+  if(q)filas=filas.filter(f=>(f.placa+' '+(f.cliente||'')+' '+f.modelo).toLowerCase().includes(q));
+  const total=filas.length; filas=filas.slice(0,9);
+
+  const hoy=tod(), lunes=sumaDias(hoy,-diaSemana(hoy));
+  const cabWeek=DIAS.map((d,i)=>{const ds=sumaDias(lunes,i);const esHoy=ds===hoy;
+    return `<div style="width:12px;text-align:center">
+      <div style="color:${esHoy?'var(--ink)':'var(--ink3)'}">${d[0]}</div>
+      <div style="color:${esHoy?'var(--ink)':'var(--ink4)'}">${new Date(ds+'T12:00:00').getDate()}</div></div>`;}).join('');
+
+  const chips=[['todas','Todas'],['rentada','Rentadas'],['libre','Libres'],['taller','Taller'],['mora','En mora']]
+    .map(([k,t])=>`<button class="byny-fchip${filtroFlota===k?' on':''}" onclick="setFiltroFlota('${k}')">${t} <span style="opacity:.6">${cuenta[k]}</span></button>`).join('');
+
+  el.innerHTML=`
+    <div class="byny-toolbar">
+      <span style="font-size:14px;font-weight:600">Flota</span>
+      ${chips}
+      <div style="flex:1"></div>
+      <input class="byny-search" placeholder="Buscar placa o cliente" value="${buscaFlota.replace(/"/g,'&quot;')}"
+             oninput="buscaFlota=this.value;renderFlota()">
+    </div>
+    <div class="byny-thead byny-grid">
+      <div>Placa</div><div class="byny-hide-narrow">Modelo</div><div>Cliente</div><div>Estado</div>
+      <div class="byny-hide-narrow" style="display:flex;gap:3px">${cabWeek}</div>
+      <div class="byny-hide-narrow" style="text-align:right">Mes</div><div style="text-align:right">Debe</div>
+    </div>
+    ${filas.length?filas.map(f=>{
+      const [bg,fg,txt]=ESTADO_PILL[f.estado];
+      return `<div class="byny-row byny-grid" onclick="goTab('motos')">
+        <div style="font-size:12.5px;font-weight:700;letter-spacing:-.01em">${f.placa}</div>
+        <div class="byny-hide-narrow" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.modelo}</div>
+        <div style="font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.cliente||'—'}</div>
+        <div><span class="byny-estado" style="background:${bg};color:${fg}">${txt}</span></div>
+        <div class="byny-hide-narrow byny-week">${f.week.map(d=>
+          `<span class="byny-day" style="background:${COLOR_DIA[d.e]}" title="${DIAS[diaSemana(d.ds)]} ${dLabel(d.ds)} · ${NOMBRE_DIA[d.e]}"></span>`).join('')}</div>
+        <div class="byny-hide-narrow" style="font-size:12.5px;text-align:right">${f.mes?money(f.mes):'—'}</div>
+        <div style="font-size:12.5px;text-align:right;${f.debe?'color:var(--fire);font-weight:700':'color:var(--ink4)'}">${f.debe?money(f.debe):'—'}</div>
+      </div>`;}).join('')
+      :`<div style="padding:28px 20px;text-align:center;font-size:12.5px;color:var(--ink2)">Ninguna moto coincide con ese filtro.</div>`}
+    <div class="byny-tfoot">
+      <span>Mostrando ${filas.length} de ${total} motos</span>
+      <span style="display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px">
+        ${['pago','gracia','pyp','pendiente'].map(k=>
+          `<span><i style="display:inline-block;width:8px;height:12px;border-radius:2px;background:${COLOR_DIA[k]};margin-right:4px;vertical-align:middle"></i>${NOMBRE_DIA[k]}</span>`).join('')}
+      </span>
+    </div>`;
+}
+function setFiltroFlota(k){filtroFlota=(filtroFlota===k&&k!=='todas')?'todas':k;renderFlota();}
+
+// La cola sale de señales reales, no de una lista fija.
+function construirCola(){
+  const items=[];
+  estadoFlota().filter(f=>f.debe>0).sort((a,b)=>b.debe-a.debe).forEach(f=>{
+    const dias=Math.ceil(f.debe/(f.tarifa||DR));
+    items.push({id:'mora-'+f.id,tono:'#FF7A5C',tipo:'Cobro vencido',
+      texto:`${f.cliente} · ${f.placa} — ${dias} ${dias===1?'día':'días'} sin pagar`,
+      meta:dias+'d',monto:money(f.debe),cta:'Cobrar',accion:`openPayForBike('${f.id}')`});
+  });
+  (DB.bikes||[]).forEach(b=>{
+    [['soatDate','SOAT'],['tecnicaDate','Técnico-mecánica']].forEach(([campo,nombre])=>{
+      if(!b[campo])return;
+      const d=Math.round((new Date(b[campo]+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
+      if(d>30||d<-365)return;
+      items.push({id:campo+'-'+b.id,tono:'#5CC8FF',tipo:'Documento',
+        texto:`${nombre} de ${b.name} ${d<0?'está vencida':'vence en '+d+' días'}`,
+        meta:d<0?'vencida':d+'d',monto:b.name,cta:'Renovar',accion:`goTab('motos')`});
+    });
+  });
+  try{
+    const ult=Number(localStorage.getItem('byny_last_backup')||0);
+    const dias=ult?Math.floor((Date.now()-ult)/86400000):99;
+    if(dias>=7)items.push({id:'backup',tono:'#A98BFF',tipo:'Respaldo',
+      texto:ult?`Han pasado ${dias} días desde tu última exportación`:'Todavía no has exportado un respaldo',
+      meta:dias>90?'—':dias+'d',monto:'Ajustes',cta:'Exportar',accion:'exportData()'});
+  }catch(e){}
+  return items.filter(i=>!colaHecha.includes(i.id));
+}
+
+function renderCola(){
+  const el=document.getElementById('queue-card');if(!el)return;
+  const items=construirCola();
+  const h=new Date(tod()+'T12:00:00');
+  el.className='byny-queue';
+  el.innerHTML=`
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+      <span style="font-size:13px;font-weight:600">Para hoy</span>
+      <span style="font-size:11px;color:var(--dark-ink3)">${DIAS[diaSemana(tod())]} ${dLabel(tod())}</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--dark-ink2);margin-top:2px">
+      ${items.length?items.length+(items.length===1?' cosa que necesita':' cosas que necesitan')+' tu decisión':'Nada pendiente'}</div>
+    ${items.length?`<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      ${items.map((i,n)=>`<div class="byny-q-item" style="border-left:3px solid ${i.tono};animation-delay:${n*40}ms">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+          <span class="byny-q-tag" style="color:${i.tono}">${i.tipo}</span>
+          <span style="font-size:11px;color:var(--dark-ink3)">${i.meta}</span></div>
+        <div style="font-size:12.5px;line-height:1.4;margin-top:5px">${i.texto}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px">
+          <span style="font-size:14px;font-weight:700">${i.monto}</span>
+          <button class="byny-q-cta" onclick="colaHecha.push('${i.id}');${i.accion};renderInicio()">${i.cta}</button>
+        </div></div>`).join('')}</div>`
+    :`<div style="padding:22px 4px 6px;text-align:center;font-size:12.5px;color:var(--dark-ink2)">Todo resuelto. Nada pendiente hoy.</div>`}`;
+}
+
+function renderUtil(cur,utilHoy){
+  const el=document.getElementById('util-card');if(!el)return;
+  const flota=estadoFlota();
+  const rodando=flota.filter(f=>f.estado==='rentada'||f.estado==='mora').length;
+  const libres=flota.filter(f=>f.estado==='libre').length;
+  const perdida=flota.filter(f=>f.estado==='libre').reduce((s,f)=>s+f.tarifa,0);
+  const C=2*Math.PI*50, val=utilHoy*C;
+  const hoy=tod(), lunes=sumaDias(hoy,-diaSemana(hoy));
+  const porDia={}; cur.forEach(d=>porDia[d.date]=d.util);
+  el.innerHTML=`
+    <div style="font-size:13px;font-weight:600">Utilización de flota</div>
+    <div style="display:flex;align-items:center;gap:18px;margin-top:14px">
+      <svg viewBox="0 0 120 120" style="width:96px;height:96px;transform:rotate(-90deg);flex-shrink:0">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--line2)" stroke-width="14"/>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--leaf)" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="${val.toFixed(1)} ${C.toFixed(1)}" style="transition:stroke-dasharray 700ms var(--ease)"/>
+      </svg>
+      <div style="min-width:0">
+        <div style="font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1">${Math.round(utilHoy*100)}%</div>
+        <div style="font-size:11.5px;color:var(--ink2);margin-top:4px">${rodando} de ${flota.length} rodando</div>
+        <div style="font-size:11.5px;color:var(--ink2);margin-top:4px">${libres?`${libres} ${libres===1?'libre':'libres'} en bodega. ${libres===1?'Es':'Son'} ${money(perdida)} al día sin usar.`:'Toda la flota está asignada.'}</div>
+      </div>
+    </div>
+    <div class="byny-strip">
+      ${DIAS.map((n,i)=>{const ds=sumaDias(lunes,i);const u=porDia[ds];const esHoy=ds===hoy;
+        const alt=u===undefined?0:Math.max(2,u*44);
+        return `<div>
+          <div style="height:44px;display:flex;align-items:flex-end"><div class="byny-strip-bar" style="width:100%;height:${alt.toFixed(0)}px;${esHoy?'background:var(--ink)':''}"></div></div>
+          <div style="font-size:9.5px;font-weight:600;color:var(--ink3);margin-top:4px">${n}</div>
+          <div style="font-size:9.5px;color:var(--ink4)">${u===undefined?'—':Math.round(u*100)+'%'}</div></div>`;}).join('')}
+    </div>`;
+}
+
+function renderTop(){
+  const el=document.getElementById('top-card');if(!el)return;
+  const mes=tod().slice(0,7);
+  const filas=(DB.bikes||[]).map(b=>({placa:b.name||'—',
+      total:(DB.payments||[]).filter(p=>p.bikeId===b.id&&(p.date||'').startsWith(mes))
+                             .reduce((s,p)=>s+Number(p.amount||0),0)}))
+    .filter(x=>x.total>0).sort((a,b)=>b.total-a.total).slice(0,6);
+  const max=filas.length?filas[0].total:1;
+  el.innerHTML=`
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font-size:13px;font-weight:600">Top ingresos del mes</span>
+      <span style="font-size:11px;color:var(--ink3)">por moto</span></div>
+    ${filas.length?`<div style="display:flex;flex-direction:column;gap:9px;margin-top:14px">
+      ${filas.map(f=>`<div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px">
+          <span style="font-size:11.5px;font-weight:700">${f.placa}</span>
+          <span style="font-size:11.5px;color:var(--ink2)">${money(f.total)}</span></div>
+        <div class="byny-track"><span style="width:${(f.total/max*100).toFixed(1)}%"></span></div>
+      </div>`).join('')}</div>`
+    :`<div style="margin-top:14px;font-size:12px;color:var(--ink2)">Sin pagos registrados este mes.</div>`}`;
+}
+
 
 // ── Dash Alerts ──
 
-function renderMaintAlerts(){
-  const el=document.getElementById('maint-alerts');if(!el)return;
-  let html='';
-  // KM milestone alerts
-  DB.bikes.forEach(b=>{
-    if(!b.maintSchedule||!b.km)return;
-    const km=parseInt(b.km)||0;
-    const kmpd=parseInt(b.kmpd)||0;
-    const next=getNextMilestone(b);
-    if(!next)return;
-    const kmLeft=next.km-km;
-    const daysLeft=kmpd>0?Math.round(kmLeft/kmpd):null;
-    const alertId='maint_'+b.id+'_'+next.km;
-    if(isDismissed(alertId))return;
-    if(kmLeft<=1500){
-      const isOverdue=kmLeft<=0;
-      const cls=isOverdue?'fire':'sun';
-      const label=isOverdue
-        ?`<strong>${b.name}</strong> — revisión ${next.km.toLocaleString('es-CO')} km VENCIDA (${Math.abs(kmLeft).toLocaleString('es-CO')} km extra)`
-        :`<strong>${b.name}</strong> — revisión ${next.km.toLocaleString('es-CO')} km próxima · faltan ~${kmLeft.toLocaleString('es-CO')} km${daysLeft?` (≈${daysLeft}d)`:''}`;
-      html+=`<div class="alert ${cls}" style="margin-bottom:.5rem">
-        <span>${label}</span>
-        <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
-          <button class="btn xs" onclick="openApptModal('${b.id}')">Agendar taller</button>
-          <button class="alert-snooze-btn" onclick="dismissAlert('${alertId}',3)">3d</button>
-        </div>
-      </div>`;
-    }
-  });
-  el.innerHTML=html;
-}
 
 
 
-function renderDocAlerts(){
-  const el=document.getElementById('dash-alerts');if(!el)return;
-  const late=DB.bikes.filter(b=>b.renter&&calcBikeBalance(b)>0);
-  const docAlerts=[];
-  DB.bikes.forEach(b=>{
-    const soat=docStatus(b.soatDate);
-    const tec=docStatus(b.tecnicaDate);
-    if(soat&&soat.urgent)docAlerts.push(`<div class="alert fire">SOAT <strong>${b.name}</strong> ${soat.expired?'VENCIDO':'vence en '+soat.daysLeft+' días'}</div>`);
-    else if(soat&&soat.soon)docAlerts.push(`<div class="alert sun">SOAT <strong>${b.name}</strong> vence en ${soat.daysLeft} días</div>`);
-    if(tec&&tec.urgent)docAlerts.push(`<div class="alert fire">Técnico Mecánica <strong>${b.name}</strong> ${tec.expired?'VENCIDA':'vence en '+tec.daysLeft+' días'}</div>`);
-    else if(tec&&tec.soon)docAlerts.push(`<div class="alert sun">Técnico Mecánica <strong>${b.name}</strong> vence en ${tec.daysLeft} días</div>`);
-  });
-  el.innerHTML=[...late.map(b=>{
-    const bal=calcBikeBalance(b);
-    const rate=getBikeCurrentRate(b);
-    const days=rate>0?Math.ceil(bal/rate):0;
-    const phone=telDeMoto(b);
-    const msg=encodeURIComponent(`Hola ${b.renter}, tienes pendiente ${fmt(bal)} (${days} día${days!==1?'s':''}) de arriendo. Por favor ponerse al día 🙏 — Byny Rental`);
-    const waLink=phone?`https://wa.me/${phone}?text=${msg}`:'';
-    const alertId='late_'+b.id+'_'+Math.ceil(bal/1000);
-    if(isDismissed(alertId))return'';
-    return`<div class="alert fire" style="margin-bottom:.5rem">
-      <span><strong>${b.renter}</strong> debe ${fmt(bal)} <span style="font-size:11px;font-weight:700">= ${days}d</span> — ${b.name}</span>
-      <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
-        ${waLink?`<a href="${waLink}" target="_blank" class="btn xs" style="background:#25d366;color:#fff;border-color:#25d366">WhatsApp</a>`:''}
-        <button class="btn xs" onclick="openPayForBike('${b.id}')">Cobrar</button>
-        <button class="alert-snooze-btn" onclick="dismissAlert('${alertId}',3)">3d</button>
-      </div>
-    </div>`;
-  }),...docAlerts.map((html,i)=>{
-    const alertId='doc_alert_'+i+'_'+VM+'_'+VY;
-    if(isDismissed(alertId))return'';
-    return html.replace('</div>',`<div style="display:flex;gap:5px;margin-top:4px"><button class="alert-snooze-btn" onclick="dismissAlert('${alertId}',3)">3d después</button><button class="alert-dismiss-btn" onclick="dismissAlert('${alertId}','forever')" title="Cerrar">✕</button></div></div>`);
-  })].join('');
-}
 
 // ── PYP Info ──
-function renderPYPInfo(){
-  const el=document.getElementById('pyp-info');if(!el)return;
-  const todayStr=tod();
-  const pypBikes=DB.bikes.filter(b=>b.renter&&b.plateDigit!==''&&b.plateDigit!==undefined&&isPYP(todayStr,b.plateDigit));
-  if(!pypBikes.length){el.innerHTML='';return;}
-  el.innerHTML=`<div class="alert sun" style="margin-bottom:.875rem">
-    <span>🚫 <strong>Pico y Placa hoy:</strong> ${pypBikes.map(b=>b.name+' (dígito '+b.plateDigit+')').join(', ')} — día no cobrable</span>
-  </div>`;
-}
 
 // ── Income bars ──
-function renderWeeklySchedule(){
-  const el=document.getElementById('weekly-schedule');if(!el)return;
-  const days=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-  const today=todayCODate();
-  const dow=today.getDay();
-  const mondayOffset=dow===0?-6:1-dow;
-  const monday=new Date(today.getFullYear(),today.getMonth(),today.getDate()+mondayOffset);
 
-  const activeBikes=DB.bikes.filter(b=>b.renter);
-  if(!activeBikes.length){el.innerHTML='<div style="font-size:13px;color:var(--ink3);padding:.5rem 0;font-weight:500">No hay motos activas esta semana.</div>';return;}
-
-  const weekDates=Array.from({length:7},(_,i)=>{
-    const d=new Date(monday);d.setDate(monday.getDate()+i);return d;
-  });
-
-  // Header row
-  let html=`<div style="display:grid;grid-template-columns:100px repeat(7,1fr);gap:3px;margin-bottom:4px">
-    <div></div>`;
-  weekDates.forEach((d,i)=>{
-    const isToday=d.toDateString()===today.toDateString();
-    html+=`<div style="text-align:center;padding:4px 2px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${isToday?'var(--fire)':'var(--ink3)'}">${days[i]}</div>
-      <div style="font-size:11px;font-weight:${isToday?'700':'500'};color:${isToday?'var(--fire)':'var(--ink3)'}">${d.getDate()}/${d.getMonth()+1}</div>
-    </div>`;
-  });
-  html+='</div>';
-
-  activeBikes.forEach(b=>{
-    const platePart=b.name.includes('—')?b.name.split('—')[1].trim():b.name;
-    const namePart=b.name.includes('—')?b.name.split('—')[0].trim():b.name;
-    // Use the day ledger so payment distribution across days is accurate
-    let ledger={};
-    try{const result=buildDayLedger(b.id);if(result)ledger=result.ledger;}catch(e){}
-    html+=`<div style="display:grid;grid-template-columns:100px repeat(7,1fr);gap:3px;margin-bottom:3px;align-items:center">`;
-    html+=`<div style="font-size:11px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:4px" title="${b.name}">
-      <div style="font-size:10px;color:var(--ink3);font-weight:500">${namePart}</div>
-      <div style="font-family:'Poppins',sans-serif;font-variant-numeric:tabular-nums;font-size:11px">${platePart}</div>
-    </div>`;
-    weekDates.forEach((d,i)=>{
-      const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      const isToday=d.toDateString()===today.toDateString();
-      const isFuture=d>today;
-      const pyp=isPYP(ds,b.plateDigit);
-      const grace=DB.graceDays.find(g=>g.bikeId===b.id&&g.date===ds);
-      const dayEntry=ledger[ds];
-
-      let bg,border,textColor,icon,label;
-      if(pyp){
-        bg='var(--fire-bg)';border='var(--fire-line)';textColor='var(--fire)';icon='🚫';label='P&P';
-      }else if(grace){
-        bg='var(--sun-bg)';border='var(--sun-line)';textColor='var(--sun)';icon='🎁';label='Gracia';
-      }else if(dayEntry&&dayEntry.status==='paid'){
-        bg='var(--leaf-bg)';border='var(--leaf-line)';textColor='var(--leaf)';icon='✓';label='';
-      }else if(dayEntry&&dayEntry.status==='partial'){
-        bg='var(--sun-bg)';border='var(--sun-line)';textColor='var(--sun)';icon='~';label='';
-      }else if(isFuture){
-        bg='var(--surface)';border='var(--line)';textColor='var(--ink4)';icon='';label='';
-      }else{
-        bg='var(--surface)';border='var(--line)';textColor='var(--ink4)';icon='';label='';
-      }
-
-      const outline=isToday?`box-shadow:0 0 0 2px var(--fire);`:'';
-      html+=`<div style="text-align:center;background:${bg};color:${textColor};border-radius:6px;padding:5px 2px;border:1px solid ${border};${outline}min-height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        ${icon?`<div style="font-size:13px;line-height:1;font-weight:700">${icon}</div>`:''}
-        ${label?`<div style="font-size:9px;font-weight:700">${label}</div>`:''}
-      </div>`;
-    });
-    html+='</div>';
-  });
-
-  // Legend
-  html+=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:.875rem;font-size:11px;font-weight:600;align-items:center">
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:var(--leaf-bg);border:1px solid var(--leaf-line);display:inline-block"></span><span style="color:var(--ink2)">Pagó</span></span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:var(--fire-bg);border:1px solid var(--fire-line);display:inline-block"></span><span style="color:var(--ink2)">Pico y Placa</span></span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:var(--sun-bg);border:1px solid var(--sun-line);display:inline-block"></span><span style="color:var(--ink2)">Día gracia</span></span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:var(--surface);border:1px solid var(--line);display:inline-block"></span><span style="color:var(--ink2)">Pendiente</span></span>
-  </div>`;
-
-  el.innerHTML=html;
-}
-
-function renderBackupReminder(){
-  const el=document.getElementById('backup-reminder');if(!el)return;
-  const lastKey='byny_last_backup_reminder';
-  const last=localStorage.getItem(lastKey);
-  const now=Date.now();
-  const sevenDays=7*24*60*60*1000;
-  if(last&&now-parseInt(last)<sevenDays){el.innerHTML='';return;}
-  el.innerHTML=`<div class="backup-banner">
-    <span>💾 Han pasado 7 días — recuerda exportar tu respaldo en Ajustes</span>
-    <div style="display:flex;gap:8px">
-      <button class="btn xs" onclick="exportData()">Exportar ahora</button>
-      <button class="btn xs ghost" onclick="dismissBackup()">Recordar después</button>
-    </div>
-  </div>`;
-}
 function dismissBackup(){
   localStorage.setItem('byny_last_backup_reminder',Date.now().toString());
-  document.getElementById('backup-reminder').innerHTML='';
 }
 
-function renderIncomeBars(){
-  const el=document.getElementById('income-bars');if(!el)return;
-  const data=DB.bikes.map(b=>{
-    const paid=DB.payments.filter(p=>{const d=new Date(p.date+'T12:00:00');return p.bikeId===b.id&&d.getMonth()===VM&&d.getFullYear()===VY;}).reduce((s,p)=>s+p.amount,0);
-    return{name:b.name,paid};
-  });
-  const max=Math.max(...data.map(d=>d.paid),1);
-  el.innerHTML=data.length?data.map(d=>`<div class="bar-row">
-    <div class="bar-lbl">${d.name.substring(0,16)}</div>
-    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.paid/max*100)}%;background:var(--sky)"></div></div>
-    <div class="bar-val" style="color:var(--ink)">${fmt(d.paid)}</div>
-  </div>`).join(''):'<div style="font-size:13px;color:var(--ink3);padding:.25rem 0;font-weight:500">Agrega motos para ver.</div>';
-}
 
 // ── Cat bars ──
-function renderCatBars(){
-  const el=document.getElementById('cat-bars');if(!el)return;
-  let exps;
-  if(expFrom||expTo){
-    exps=DB.expenses.filter(e=>(!expFrom||e.date>=expFrom)&&(!expTo||e.date<=expTo));
-  }else{
-    exps=DB.expenses.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getMonth()===VM&&d.getFullYear()===VY;});
-  }
-  const totals={};exps.forEach(e=>{totals[e.cat]=(totals[e.cat]||0)+e.amount;});
-  const max=Math.max(...Object.values(totals),1);
-  const total=Object.values(totals).reduce((s,v)=>s+v,0);
-  if(!total){el.innerHTML='<div style="font-size:13px;color:var(--ink3);font-weight:500">Sin gastos este mes.</div>';return;}
-  el.innerHTML=Object.entries(CATS).filter(([k])=>totals[k]).map(([k,v])=>`<div class="bar-row">
-    <div class="bar-lbl">${v.label}</div>
-    <div class="bar-track"><div class="bar-fill" style="width:${Math.round((totals[k]||0)/max*100)}%;background:${v.color}"></div></div>
-    <div class="bar-val" style="color:var(--ink)">${fmt(totals[k]||0)}</div>
-  </div>`).join('');
-}
 
 // ── TX HTML builder ──
 function txHTML(p,showDelete=true){
@@ -4170,11 +4550,6 @@ function txHTML(p,showDelete=true){
   </div>`;
 }
 
-function renderRecentTx(){
-  const el=document.getElementById('recent-tx');if(!el)return;
-  const sorted=[...DB.payments].sort((a,b)=>b.date.localeCompare(a.date));
-  el.innerHTML=sorted.length?sorted.slice(0,6).map(p=>txHTML(p)).join(''):'<div class="empty"><strong>Sin movimientos</strong>Registra tu primer pago con el botón "+ Pago"</div>';
-}
 function renderAllTx(){
   const el=document.getElementById('all-tx');if(!el)return;
   const countEl=document.getElementById('movs-count');
@@ -5986,7 +6361,6 @@ document.addEventListener('click',e=>{
   const qaMenu=document.getElementById('quick-add-menu');
   if(qaMenu&&qaMenu.style.display==='block'&&!e.target.closest('#quick-add-btn')&&!e.target.closest('#quick-add-menu'))closeQuickAdd();
 });
-document.getElementById('hdr-date').textContent=todayCODate().toLocaleDateString('es-CO',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
 
 load();
 

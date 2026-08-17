@@ -80,6 +80,27 @@ the rotation in force from 3 August 2026.
 Update it in the app when the city rotates — not in the code. Restriction days are
 non-billable, so a stale table silently overcharges and undercharges drivers.
 
+## Inicio (dashboard) — v5.0
+
+Rebuilt from the design handoff in `design_handoff_byny_dashboard`. Only Inicio was in scope;
+Motos, Dinero and Ajustes keep their existing layouts and inherit the new tokens.
+
+Everything on the dashboard derives from **one daily ledger** (`construirLedger`) — cash, net,
+debt, utilization, the chart and the fleet table are different views of the same rows, so they
+cannot disagree. Cash reconciles as `entrada − salida − retiros`, accumulated from the first
+recorded movement rather than from the window start.
+
+The app's ~16 expense categories collapse onto the design's five buckets in `GRUPOS_GASTO`;
+new categories fall through to `otros`, and the buckets always sum to the period's salida.
+
+The "Para hoy" queue is derived from real signals — overdue drivers, documents expiring within
+30 days, and the backup reminder — not the seeded list in the prototype. Its CTAs run real
+actions.
+
+Notes for future work: the chart y-scale deliberately ignores retiros, since a single large
+withdrawal would flatten every daily bar. Delta pills are suppressed when the previous period
+has no data, because dividing by a zero baseline produced values like `+2.500.000%`.
+
 ## Importing
 
 `Importar JSON` **adds** to what is already loaded; it does not replace it. Replacing is
