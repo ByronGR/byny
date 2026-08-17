@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.8 -->
+<!-- Byny Rental v5.9 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -243,6 +243,51 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 .byny-strip-bar{border-radius:4px 4px 2px 2px;background:var(--leaf-pale);transition:height 400ms var(--ease)}
 .byny-track{height:6px;background:var(--track);border-radius:999px;overflow:hidden}
 .byny-track>span{display:block;height:100%;background:var(--leaf);border-radius:999px;transition:width 600ms var(--ease)}
+
+/* ═══ FICHA DE MOTO ═══ */
+.md-back{display:inline-block;font-size:12.5px;color:var(--ink2);cursor:pointer;margin-bottom:14px;text-decoration:none}
+.md-back:hover{color:var(--ink)}
+.md-placa{font-size:28px;font-weight:700;letter-spacing:-.03em}
+.md-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
+.md-stat{background:var(--surface2);border:1px solid var(--line2);border-radius:10px;padding:12px 14px;min-width:0}
+.md-stat-l{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.md-stat-v{font-size:19px;font-weight:700;letter-spacing:-.02em;margin-top:5px}
+.md-stat-s{font-size:11px;color:var(--ink2);margin-top:2px}
+.md-subnav{display:flex;gap:0;border-bottom:1px solid var(--line);margin:20px 0;overflow-x:auto;scrollbar-width:none}
+.md-subnav::-webkit-scrollbar{display:none}
+.md-tab{padding:10px 2px 12px;margin-right:24px;font-size:13px;font-weight:500;color:var(--ink2);
+  background:none;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.md-tab.on{font-weight:600;color:var(--ink);border-bottom-color:var(--leaf)}
+.md-cal{display:grid;gap:20px}
+@media(min-width:900px){.md-cal{grid-template-columns:300px minmax(0,1fr)}}
+.md-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.md-cal-h{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:center;padding-bottom:4px}
+.md-day{height:34px;border-radius:7px;font-size:11.5px;font-weight:600;display:flex;align-items:center;
+  justify-content:center;border:none;font-family:inherit;transition:transform 120ms var(--ease)}
+.md-day.clickable{cursor:pointer}
+.md-day.clickable:hover{transform:scale(1.08)}
+.md-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--divider)}
+.md-row-l{font-size:11.5px;color:var(--ink2)}
+.md-row-v{font-size:12.5px;font-weight:600}
+.libre-chips{display:flex;gap:5px;margin-top:12px}
+.libre-chip{flex:1;padding:8px 2px;border-radius:8px;font-size:11.5px;font-weight:600;cursor:pointer;
+  font-family:inherit;background:var(--surface);border:1px solid var(--line);color:var(--ink3);transition:all 150ms}
+.libre-chip.on{background:#DCE5EE;border-color:#5B6B7A;color:#3E4C59}
+.libre-chip:disabled{opacity:.35;cursor:not-allowed}
+.tar-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.md-mini{padding:9px 12px;background:var(--surface2);border:1px solid var(--line2);border-radius:8px;
+  font-size:12.5px;color:var(--ink2);line-height:1.45}
+.md-input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;
+  font-family:inherit;color:var(--ink);background:var(--surface)}
+.md-input:focus{outline:none;border-color:var(--leaf)}
+.md-btn{width:100%;padding:9px;background:var(--ink);color:#fff;border:none;border-radius:8px;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.md-btn:hover{background:var(--leaf)}
+.md-btn.ghost{background:var(--surface);color:var(--ink2);border:1px solid var(--line)}
+.md-btn.ghost:hover{background:var(--surface2);color:var(--ink)}
+.md-bar{height:8px;background:var(--track);border-radius:999px;overflow:hidden}
+.md-bar>span{display:block;height:100%;border-radius:999px;transition:width 600ms var(--ease)}
 
 /* ═══ SECTIONS ═══ */
 .sec{display:none}.sec.on{display:block}
@@ -742,7 +787,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.8</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v5.9</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -786,6 +831,17 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
       <div class="byny-card" id="util-card"></div>
       <div class="byny-card" id="top-card"></div>
     </aside>
+  </div>
+</div>
+
+<!-- ═══ FICHA DE MOTO ═══ -->
+<div id="moto-detail" class="sec">
+  <a class="md-back" onclick="cerrarMoto()">← Volver a Motos</a>
+  <div id="md-header"></div>
+  <div class="md-subnav" id="md-subnav"></div>
+  <div class="byny-shell">
+    <div class="byny-main" id="md-main"></div>
+    <aside class="byny-rail" id="md-rail"></aside>
   </div>
 </div>
 
@@ -2600,15 +2656,21 @@ const TAB_ALIAS={bikes:'motos',admin:'motos',contratos:'motos',
 const SUB_FOR_OLD={bikes:'p-motos',admin:'p-conductores',contratos:'p-contratos',
                    movs:'p-pagos',gastos:'p-gastos',retiros:'p-retiros',finanzas:'p-resumen'};
 
+// Resalta la pestaña activa. La cabecera de escritorio usa .byny-tab con la
+// clase "on"; la barra móvil usa .mob-tab con "active".
+function marcarPestana(id){
+  document.querySelectorAll('.byny-tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===id));
+  document.querySelectorAll('.mob-tab').forEach(t=>{
+    if(t.dataset.tab)t.classList.toggle('active',t.dataset.tab===id);});
+}
+
 function goTab(id){
   // El resaltado se hace por data-tab, no por posición: antes se comparaba el
   // índice del botón contra una lista fija y se marcaba la pestaña equivocada.
   const sub=SUB_FOR_OLD[id];
   if(TAB_ALIAS[id])id=TAB_ALIAS[id];
   if(!document.getElementById(id))id='dash';
-  document.querySelectorAll('.nav-tab,.mob-tab').forEach(t=>{
-    if(t.dataset.tab)t.classList.toggle('active',t.dataset.tab===id);
-  });
+  marcarPestana(id);
   document.querySelectorAll('.sec').forEach(s=>s.classList.toggle('on',s.id===id));
   try{localStorage.setItem('byny_active_tab',id);}catch(e){}
   if(sub)goSub(id,sub,true); else restoreSub(id);
@@ -4392,6 +4454,452 @@ function renderKpis(m){
             'var(--ink)','rgba(20,24,29,.06)',m.cur.map(d=>d.util),m.utilProm,m.pUtil,true);
 }
 
+// ═══════════ FICHA DE MOTO ═══════════
+let motoAbierta=null, mdTab='resumen', calMes=0;
+
+function abrirMoto(id){
+  motoAbierta=id; mdTab='resumen'; calMes=0;
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('moto-detail').classList.add('on');
+  marcarPestana('motos');
+  window.scrollTo(0,0);
+  renderMoto();
+}
+function cerrarMoto(){motoAbierta=null;goTab('motos');}
+function mdGo(t){mdTab=t;renderMoto();}
+
+function renderMoto(){
+  const b=(DB.bikes||[]).find(x=>x.id===motoAbierta);
+  if(!b){cerrarMoto();return;}
+  const L=(()=>{try{return buildDayLedger(b.id).ledger||{};}catch(e){return{};}})();
+  const debe=b.renter&&b.startDate?Math.max(0,calcBikeBalance(b)):0;
+  const mes=tod().slice(0,7);
+  const pagadoMes=(DB.payments||[]).filter(p=>p.bikeId===b.id&&(p.date||'').startsWith(mes)&&p.payType!=='purchase')
+                                   .reduce((s,p)=>s+Number(p.amount||0),0);
+  const recaudado=(DB.payments||[]).filter(p=>p.bikeId===b.id&&p.payType!=='purchase')
+                                   .reduce((s,p)=>s+Number(p.amount||0),0);
+  const abonado=(DB.payments||[]).filter(p=>p.bikeId===b.id&&p.payType==='purchase')
+                                 .reduce((s,p)=>s+Number(p.amount||0),0);
+  const dig=digitoDeMoto(b);
+  const dias=dig?(pypMap()[parseInt(dig)]||[]).map(d=>PYP_DAY_NAMES[d]).join(' y '):'—';
+  const est=(()=>{const f=estadoFlota().find(x=>x.id===b.id);return f?f.estado:'libre';})();
+  const [bg,fg,txt]=ESTADO_PILL[est];
+
+  document.getElementById('md-header').innerHTML=`
+    <div class="byny-card" style="padding:20px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span class="md-placa">${b.name||'—'}</span>
+            <span class="byny-estado" style="background:${bg};color:${fg}">${txt}</span>
+          </div>
+          <div style="font-size:13px;color:var(--ink2);margin-top:4px">
+            ${[b.engine,b.year,b.km?Number(b.km).toLocaleString('es-CO')+' km':''].filter(Boolean).join(' · ')||'Sin datos de la moto'}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="md-btn" style="width:auto;padding:9px 16px" onclick="openPayForBike('${b.id}')">Registrar pago</button>
+          <button class="md-btn ghost" style="width:auto;padding:9px 16px" onclick="openM('appt-modal')">Agendar taller</button>
+        </div>
+      </div>
+      <div class="md-stats">
+        <div class="md-stat"><div class="md-stat-l">Por cobrar</div>
+          <div class="md-stat-v" style="color:${debe?'var(--fire)':'var(--ink)'}">${money(debe)}</div>
+          <div class="md-stat-s">${debe?getBikeOwedDays(b)+' días pendientes':'Al día'}</div></div>
+        <div class="md-stat"><div class="md-stat-l">Pagado este mes</div>
+          <div class="md-stat-v">${money(pagadoMes)}</div>
+          <div class="md-stat-s">Arriendo cobrado</div></div>
+        <div class="md-stat"><div class="md-stat-l">${abonado?'Abonado a la compra':'Recaudado en arriendo'}</div>
+          <div class="md-stat-v">${money(abonado||recaudado)}</div>
+          <div class="md-stat-s">${abonado?'Va para la compra':'Histórico de la moto'}</div></div>
+        <div class="md-stat"><div class="md-stat-l">Pico y placa</div>
+          <div class="md-stat-v" style="font-size:16px">${dias}</div>
+          <div class="md-stat-s">${dig?'Primer número '+dig+' · 5 a. m. a 8 p. m.':'Sin placa'}</div></div>
+      </div>
+    </div>`;
+
+  const tabs=[['resumen','Resumen'],['pagos','Pagos'],['km','Kilometraje'],['mant','Mantenimiento'],['docs','Documentos']];
+  document.getElementById('md-subnav').innerHTML=tabs.map(([k,t])=>
+    `<button class="md-tab${mdTab===k?' on':''}" onclick="mdGo('${k}')">${t}</button>`).join('');
+
+  const main=document.getElementById('md-main'), rail=document.getElementById('md-rail');
+  main.innerHTML=''; rail.innerHTML='';
+  if(mdTab==='resumen'){ main.innerHTML=mdResumenMain(b,L,debe); rail.innerHTML=mdCliente(b)+mdDiasLibres(b)+mdTarifa(b)+mdAjustes(b); }
+  else if(mdTab==='pagos'){ main.innerHTML=mdCalendario(b,L); rail.innerHTML=mdCliente(b)+mdDiasLibres(b); }
+  else if(mdTab==='km'){ main.innerHTML=mdKm(b); rail.innerHTML=mdDatosMoto(b); }
+  else if(mdTab==='mant'){ main.innerHTML=mdMant(b); rail.innerHTML=mdDatosMoto(b); }
+  else { main.innerHTML=mdDocs(b); rail.innerHTML=mdDatosMoto(b); }
+}
+
+function mdResumenMain(b,L,debe){
+  const movs=[
+    ...(DB.payments||[]).filter(p=>p.bikeId===b.id).map(p=>({f:p.date,t:p.payType==='purchase'?'Abono a la compra':'Pago de arriendo',v:Number(p.amount||0),c:'var(--leaf)'})),
+    ...(DB.expenses||[]).filter(e=>e.bikeId===b.id).map(e=>({f:e.date,t:e.desc||CATS[e.cat]?.label||'Gasto',v:-Number(e.amount||0),c:'var(--fire)'})),
+    ...ajustesDeMoto(b.id).map(a=>({f:a.fecha,t:a.concepto+' (lo pagó él)',v:0,extra:'−'+money(a.monto),c:'var(--leaf-deep)'}))
+  ].filter(m=>m.f).sort((a,c)=>c.f.localeCompare(a.f)).slice(0,25);
+  return `<div class="byny-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">Movimientos de esta moto</div>
+    <div style="font-size:11.5px;color:var(--ink2);margin-bottom:10px">Cobros, gastos y arreglos, del más reciente al más antiguo</div>
+    ${movs.length?movs.map(m=>`<div class="md-row">
+      <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${m.t}</div>
+        <div style="font-size:11px;color:var(--ink3)">${fmtD(m.f)}</div></div>
+      <div style="font-size:12.5px;font-weight:600;color:${m.c};white-space:nowrap">${m.extra||(m.v>0?'+':'')+money(Math.abs(m.v))}</div>
+    </div>`).join(''):'<div style="font-size:12.5px;color:var(--ink2);padding:8px 0">Todavía no hay movimientos.</div>'}
+  </div>`;
+}
+
+function mdCliente(b){
+  const tel=telDeMoto(b);
+  const d=(DB.drivers||[]).find(x=>x.id===b.driverId);
+  const nombre=b.renter||(d?`${d.fname||''} ${d.lname||''}`.trim():'')||'Sin conductor';
+  if(!b.renter)return `<div class="byny-card"><div style="font-size:14px;font-weight:600">Cliente</div>
+    <div style="font-size:12.5px;color:var(--ink2);margin-top:6px">Esta moto está libre. Asígnala para empezar a cobrar.</div></div>`;
+  return `<div class="byny-card">
+    <div style="font-size:15px;font-weight:600">${nombre}</div>
+    ${tel?`<div style="font-size:12.5px;color:var(--ink2);margin-top:2px">+${tel}</div>`:''}
+    <div style="font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.7">
+      Con la moto desde ${fmtD(b.startDate)}<br>
+      Arriendo ${money(getBikeCurrentRate(b))} al día
+    </div>
+    ${tel?`<a href="https://wa.me/${tel}" target="_blank" class="md-btn ghost" style="display:block;text-align:center;margin-top:12px;text-decoration:none">Escribir por WhatsApp</a>`:''}
+  </div>`;
+}
+
+// ── Regla 2 en pantalla: los siete días como interruptores ──
+function mdDiasLibres(b){
+  const libres=diasLibresDe(b);
+  const nombres=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const costo=costoDiasLibres(b);
+  const sub=libres.length?'No se cobra '+libres.map(i=>nombres[i]).join(', ')
+                         :'Se cobra los siete días';
+  return `<div class="byny-card">
+    <div style="font-size:14px;font-weight:600">Días libres</div>
+    <div style="font-size:11.5px;color:var(--ink2);margin-top:2px">${sub}</div>
+    <div class="libre-chips">
+      ${nombres.map((n,i)=>{
+        const permitido=diaLibrePermitido(b,i);
+        return `<button class="libre-chip${libres.includes(i)?' on':''}" ${permitido?'':'disabled'}
+          title="${permitido?'':'Es el pico y placa de esta moto'}"
+          onclick="toggleDiaLibre('${b.id}',${i})">${n}</button>`;}).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:10px">
+      ${libres.length?'Son '+money(costo)+' al mes que no se facturan.':'Toca un día para dejarlo libre.'}
+    </div>
+  </div>`;
+}
+function toggleDiaLibre(id,idx){
+  const b=(DB.bikes||[]).find(x=>x.id===id);if(!b)return;
+  if(!diaLibrePermitido(b,idx)){
+    alert('Ese día ya es el pico y placa de la moto. El conductor no puede trabajarlo, así que no tiene sentido dárselo libre.');
+    return;
+  }
+  const libres=new Set(diasLibresDe(b));
+  libres.has(idx)?libres.delete(idx):libres.add(idx);
+  b.diasLibres=[...libres].sort((a,c)=>a-c);
+  save();renderMoto();
+}
+
+// ── Regla 3 en pantalla: historial de tarifas, la más nueva arriba ──
+function mdTarifa(b){
+  const hist=[...(b.rateHistory||[])].sort((a,c)=>c.fromDate.localeCompare(a.fromDate));
+  if(!hist.length&&b.rate)hist.push({rate:b.rate,fromDate:b.startDate||tod()});
+  const filas=hist.map((h,i)=>{
+    const prev=hist[i+1];
+    const delta=prev?Number(h.rate)-Number(prev.rate):null;
+    const hasta=i===0?'hoy':fmtD(sumaDias(hist[i-1].fromDate,-1));
+    const dias=diasEntre(h.fromDate,i===0?tod():sumaDias(hist[i-1].fromDate,-1));
+    return `<div style="display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--divider)">
+      <span class="tar-dot" style="background:${i===0?'var(--leaf)':'var(--ink4)'}"></span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;gap:8px">
+          <span style="font-size:12.5px;font-weight:600">${money(h.rate)} / día</span>
+          <span style="font-size:11px;font-weight:700;color:${delta===null?'var(--ink3)':delta>0?'var(--leaf-deep)':'var(--fire-deep)'}">
+            ${delta===null?'tarifa inicial':(delta>0?'+':'−')+money(Math.abs(delta))}</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:1px">${fmtD(h.fromDate)} — ${hasta} · ${dias} día${dias===1?'':'s'}</div>
+      </div></div>`;}).join('');
+  return `<div class="byny-card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font-size:14px;font-weight:600">Tarifa</span>
+      <span style="font-size:17px;font-weight:700">${money(getBikeCurrentRate(b))}</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--ink2);margin-top:2px">Vigente desde el ${fmtD(hist.length?hist[0].fromDate:b.startDate)}</div>
+    <div style="margin-top:10px">${filas}</div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--track)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Cambiar de aquí en adelante</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input type="date" class="md-input" id="tar-desde" value="${tod()}">
+        <input type="number" class="md-input" id="tar-valor" placeholder="${getBikeCurrentRate(b)}">
+      </div>
+      <button class="md-btn" style="margin-top:8px" onclick="aplicarTarifa('${b.id}')">Aplicar desde esa fecha</button>
+      <div style="font-size:11px;color:var(--ink3);margin-top:6px">Los días anteriores se quedan con la tarifa que tenían.</div>
+    </div>
+  </div>`;
+}
+function aplicarTarifa(id){
+  const b=(DB.bikes||[]).find(x=>x.id===id);if(!b)return;
+  const desde=document.getElementById('tar-desde').value||tod();
+  const valor=parseInt(document.getElementById('tar-valor').value)||0;
+  if(!valor){alert('Escribe la nueva tarifa.');return;}
+  if(!b.rateHistory)b.rateHistory=[];
+  if(!b.rateHistory.length)b.rateHistory.push({rate:getBikeCurrentRate(b),fromDate:b.startDate||'2020-01-01'});
+  // Regla 3: se AÑADE una entrada, nunca se modifica la historia.
+  b.rateHistory=b.rateHistory.filter(r=>r.fromDate!==desde);
+  b.rateHistory.push({rate:valor,fromDate:desde});
+  compactBikeRateHistory(b);
+  if(desde<=tod())b.rate=getBikeRateForDate(b,tod());
+  save();renderMoto();
+  showSaved(money(valor)+' al día desde el '+fmtD(desde)+' · lo anterior queda como estaba');
+}
+
+// ── Regla 4 en pantalla ──
+function mdAjustes(b){
+  const aj=ajustesDeMoto(b.id).sort((a,c)=>(c.fecha||'').localeCompare(a.fecha||''));
+  const total=aj.reduce((s,a)=>s+Number(a.monto||0),0);
+  const bruta=Math.max(0,calcBikeBalance(b))+total;
+  return `<div class="byny-card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+      <span style="font-size:14px;font-weight:600">Arreglos que pagó él</span>
+      <span style="font-size:15px;font-weight:700;color:var(--leaf-deep)">${total?'−'+money(total):money(0)}</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--ink2);margin-top:2px">
+      ${total?money(bruta)+' menos '+money(total)+' en arreglos que pagó él':'Sin arreglos pagados por el conductor'}</div>
+    <div style="margin-top:10px">
+      ${aj.length?aj.map(a=>`<div class="md-row">
+        <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${a.concepto}</div>
+          <div style="font-size:11px;color:var(--ink3)">${fmtD(a.fecha)}</div></div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--leaf-deep);white-space:nowrap">−${money(a.monto)}</div>
+      </div>`).join('')
+      :'<div style="font-size:11.5px;color:var(--ink3)">Todo lo del taller lo ha puesto la empresa.</div>'}
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:10px;line-height:1.5">
+      Baja lo que debe. La caja no se mueve, porque esa plata nunca entró.</div>
+  </div>`;
+}
+
+const COLOR_ESTADO={pago:['var(--leaf)','#fff'],gracia:['#FBCE7A','#7A5A00'],
+  pyp:['#F3B4A5','#8A3520'],pendiente:['var(--fire)','#fff'],
+  libre:['#DCE5EE','#5B6B7A'],off:['#EDF0F3','var(--ink3)'],futuro:['#fff','var(--ink4)']};
+const NOMBRE_ESTADO={pago:'Pagó',gracia:'Gracia',pyp:'Pico y placa',pendiente:'Pendiente',
+  libre:'Día libre',off:'Sin rentar',futuro:'Todavía no'};
+
+function mdCalendario(b,L){
+  const hoyD=new Date(tod()+'T12:00:00');
+  const ref=new Date(hoyD.getFullYear(),hoyD.getMonth()+calMes,1);
+  const y=ref.getFullYear(), m=ref.getMonth();
+  const total=daysInMonth(m,y);
+  const primero=(new Date(y,m,1).getDay()+6)%7;   // 0 = lunes
+  let pagados=0,pendientes=0,libres=0,porCobrar=0;
+  let celdas='';
+  for(let i=0;i<primero;i++)celdas+='<div></div>';
+  for(let d=1;d<=total;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const e=estadoDia(b,ds,L);
+    const [bg,fg]=COLOR_ESTADO[e];
+    if(e==='pago')pagados++;
+    if(e==='pendiente'){pendientes++;porCobrar+=getBikeRateForDate(b,ds);}  // suma tarifa por día
+    if(e==='libre')libres++;
+    const clic=['pago','pendiente','gracia'].includes(e);
+    celdas+=`<button class="md-day${clic?' clickable':''}" style="background:${bg};color:${fg};${e==='futuro'?'border:1px solid var(--line2)':''}"
+      title="${fmtD(ds)} · ${NOMBRE_ESTADO[e]}" ${clic?`onclick="alternarDia('${b.id}','${ds}')"`:'disabled'}>${d}</button>`;
+  }
+  const tarifaMes=getBikeRateForDate(b,`${y}-${String(m+1).padStart(2,'0')}-15`);
+  return `<div class="byny-card">
+    <div class="md-cal">
+      <div>
+        <div class="md-cal-grid" style="margin-bottom:2px">
+          ${['L','M','M','J','V','S','D'].map(x=>`<div class="md-cal-h">${x}</div>`).join('')}
+        </div>
+        <div class="md-cal-grid">${celdas}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:10.5px;color:var(--ink2)">
+          ${['pago','gracia','pyp','pendiente','libre'].map(k=>
+            `<span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${COLOR_ESTADO[k][0]};margin-right:4px;vertical-align:middle"></i>${NOMBRE_ESTADO[k]}</span>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="byny-mbtn" onclick="calMes--;renderMoto()">←</button>
+          <button class="byny-mbtn" onclick="if(calMes<0){calMes++;renderMoto()}" ${calMes>=0?'disabled style="opacity:.35"':''}>→</button>
+        </div>
+        <div style="font-size:17px;font-weight:700;margin-top:10px">${MESES[m]} ${y}</div>
+        <div style="font-size:11.5px;color:var(--ink2)">${total} días · tarifa ${money(tarifaMes)}</div>
+        <div style="margin-top:14px">
+          <div class="md-row"><span class="md-row-l">Días pagados</span><span class="md-row-v" style="color:var(--leaf-deep)">${pagados}</span></div>
+          <div class="md-row"><span class="md-row-l">Días pendientes</span><span class="md-row-v" style="color:${pendientes?'var(--fire-deep)':'var(--ink)'}">${pendientes}</span></div>
+          <div class="md-row"><span class="md-row-l">Días libres</span><span class="md-row-v" style="color:#5B6B7A">${libres}</span></div>
+          <div class="md-row" style="border-bottom:none"><span class="md-row-l">Por cobrar del mes</span><span class="md-row-v">${money(porCobrar)}</span></div>
+        </div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:10px;line-height:1.5">
+          Toca un día para marcarlo pagado o pendiente. Los días libres y los de pico y placa no se cobran.
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Marcar un día como pagado registra el cobro de ESE día a la tarifa de ESE día.
+function alternarDia(id,ds){
+  const b=(DB.bikes||[]).find(x=>x.id===id);if(!b)return;
+  let L={};try{L=buildDayLedger(b.id).ledger||{};}catch(e){}
+  const e=estadoDia(b,ds,L);
+  if(['off','libre','pyp','futuro'].includes(e))return;
+  const tarifa=getBikeRateForDate(b,ds);
+  if(e==='pendiente'){
+    DB.payments.push({id:'p'+Date.now(),bikeId:b.id,amount:tarifa,date:ds,
+      method:'Efectivo',notes:'Día '+fmtD(ds)+' marcado en el calendario',payType:'rental',receipt:null,receiptURL:null});
+    showSaved('Día '+fmtD(ds)+' cobrado · '+money(tarifa));
+  }else{
+    const i=(DB.payments||[]).findIndex(p=>p.bikeId===b.id&&p.date===ds&&p.payType!=='purchase');
+    if(i<0){alert('Ese día lo cubre un pago de otra fecha. Bórralo desde Dinero → Pagos.');return;}
+    DB.payments.splice(i,1);
+    showSaved('Día '+fmtD(ds)+' vuelve a pendiente');
+  }
+  save();renderMoto();
+}
+
+function mdKm(b){
+  const log=[...(b.kmLog||[])].filter(x=>x&&x.date).sort((a,c)=>c.date.localeCompare(a.date));
+  const base=Number(b.kmpd)||0;
+  const filas=log.map((r,i)=>{
+    const prev=log[i+1];
+    const delta=prev?Number(r.km)-Number(prev.km):null;
+    const dias=prev?Math.max(1,diasEntre(prev.date,r.date)-1):null;
+    const kmd=delta!==null&&dias?Math.round(delta/dias):null;
+    const tono=kmd===null||!base?'var(--ink2)':kmd>base*1.25?'var(--fire)':kmd<base*0.6?'var(--sun-text)':'var(--ink2)';
+    return `<div class="md-row">
+      <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${Number(r.km).toLocaleString('es-CO')} km</div>
+        <div style="font-size:11px;color:var(--ink3)">${fmtD(r.date)}${r.by?' · '+r.by:''}</div></div>
+      <div style="text-align:right;white-space:nowrap">
+        <div style="font-size:12.5px;font-weight:600;color:${tono}">${kmd!==null?kmd+' km/día':'—'}</div>
+        <div style="font-size:11px;color:var(--ink3)">${delta!==null?'+'+delta.toLocaleString('es-CO')+' km · '+dias+'d':'primera lectura'}</div></div>
+    </div>`;}).join('');
+  const ult30=log.filter(r=>r.date>=sumaDias(tod(),-30));
+  const salto=log.reduce((mx,r,i)=>{const p=log[i+1];return p?Math.max(mx,Number(r.km)-Number(p.km)):mx;},0);
+  const prom=(()=>{if(log.length<2)return base;const a=log[0],z=log[log.length-1];
+    const d=Math.max(1,diasEntre(z.date,a.date)-1);return Math.round((Number(a.km)-Number(z.km))/d);})();
+  return `<div class="byny-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:12px">Kilometraje</div>
+    <div class="md-stats" style="margin-top:0">
+      <div class="md-stat"><div class="md-stat-l">Km hoy</div><div class="md-stat-v">${b.km?Number(b.km).toLocaleString('es-CO'):'—'}</div><div class="md-stat-s">Odómetro</div></div>
+      <div class="md-stat"><div class="md-stat-l">Promedio diario</div><div class="md-stat-v">${prom||'—'}</div><div class="md-stat-s">Base ${base||'—'} km/día</div></div>
+      <div class="md-stat"><div class="md-stat-l">Últimos 30 días</div><div class="md-stat-v">${ult30.length}</div><div class="md-stat-s">lecturas</div></div>
+      <div class="md-stat"><div class="md-stat-l">Mayor salto</div><div class="md-stat-v">${salto?salto.toLocaleString('es-CO'):'—'}</div><div class="md-stat-s">km entre lecturas</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin:16px 0 6px">
+      <input type="number" class="md-input" id="km-nuevo" placeholder="Nuevo odómetro">
+      <button class="md-btn" style="width:auto;padding:9px 16px" onclick="registrarKm('${b.id}')">Registrar lectura</button>
+    </div>
+    <div style="margin-top:8px">${filas||'<div style="font-size:12.5px;color:var(--ink2)">Sin lecturas registradas.</div>'}</div>
+  </div>`;
+}
+function registrarKm(id){
+  const b=(DB.bikes||[]).find(x=>x.id===id);if(!b)return;
+  const v=parseInt(document.getElementById('km-nuevo').value)||0;
+  if(!v){alert('Escribe el kilometraje.');return;}
+  if(v<Number(b.km||0)&&!confirm('Ese número es menor que el actual ('+Number(b.km).toLocaleString('es-CO')+' km). ¿Seguro?'))return;
+  if(!b.kmLog)b.kmLog=[];
+  b.kmLog.push({km:v,date:tod(),by:'Admin',source:'admin'});
+  b.km=String(v);
+  save();renderMoto();showSaved('Lectura registrada');
+}
+
+function mdMant(b){
+  const log=[...(b.mantLog||[]),
+    ...(DB.expenses||[]).filter(e=>e.bikeId===b.id&&e.km).map(e=>({tipo:CATS[e.cat]?.label||e.cat,km:Number(e.km),date:e.date,costo:Number(e.amount||0)}))]
+    .filter(x=>x&&x.date).sort((a,c)=>c.date.localeCompare(a.date));
+  const kmHoy=Number(b.km)||0, porDia=Number(b.kmpd)||30;
+  const cat=[['aceite','Aceite y filtro',2500],['filtro','Filtro de aire',8000],['bujia','Bujía',10000],
+             ['llantas','Llantas',15000],['frenos','Pastillas de freno',12000],['cadena','Cadena y piñones',18000],
+             ['bateria','Batería',24000],['revision','Revisión general',6000]];
+  const prox=cat.map(([k,nombre,intervalo])=>{
+    const ult=log.find(x=>(x.tipo||'').toLowerCase().includes(nombre.split(' ')[0].toLowerCase()));
+    const desde=ult?Number(ult.km):null;
+    const proximo=desde!==null?desde+intervalo:null;
+    const faltan=proximo!==null?proximo-kmHoy:null;
+    const pct=proximo!==null?Math.min(100,Math.max(0,((kmHoy-desde)/intervalo)*100)):0;
+    return {nombre,intervalo,desde,proximo,faltan,pct,dias:faltan!==null?Math.round(faltan/porDia):null};
+  }).sort((a,c)=>(a.faltan===null?1e9:a.faltan)-(c.faltan===null?1e9:c.faltan)).slice(0,8);
+  const urgente=prox.find(p=>p.faltan!==null&&p.faltan<=p.intervalo*0.12);
+  return `${urgente?`<div class="byny-card" style="border-color:var(--fire-line);background:var(--fire-surface);margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--fire-deep)">Hazlo ya</div>
+      <div style="font-size:14px;font-weight:600;margin-top:4px">${urgente.nombre}</div>
+      <div style="font-size:12px;color:var(--ink2);margin-top:2px">
+        ${urgente.faltan<0?'Pasado por '+Math.abs(urgente.faltan).toLocaleString('es-CO')+' km':'Faltan '+urgente.faltan.toLocaleString('es-CO')+' km (≈'+urgente.dias+' días)'}</div>
+    </div>`:''}
+    <div class="byny-card">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Próximos mantenimientos</div>
+      <div style="font-size:11.5px;color:var(--ink2);margin-bottom:12px">Calculado con el historial real y ${porDia} km/día</div>
+      ${prox.map(p=>`<div style="padding:9px 0;border-bottom:1px solid var(--divider)">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px">
+          <span style="font-size:12.5px;font-weight:600">${p.nombre}</span>
+          <span style="font-size:11.5px;color:${p.faltan===null?'var(--ink3)':p.faltan<0?'var(--fire)':p.pct>75?'var(--sun-text)':'var(--ink2)'};white-space:nowrap">
+            ${p.faltan===null?'Sin registro · sería el primero'
+              :p.faltan<0?'Pasado por '+Math.abs(p.faltan).toLocaleString('es-CO')+' km'
+              :'Faltan '+p.faltan.toLocaleString('es-CO')+' km · ≈'+p.dias+'d'}</span>
+        </div>
+        <div class="md-bar"><span style="width:${p.pct.toFixed(0)}%;background:${p.faltan!==null&&p.faltan<0?'var(--fire)':p.pct>75?'var(--sun)':'var(--leaf)'}"></span></div>
+      </div>`).join('')}
+    </div>
+    <div class="byny-card" style="margin-top:16px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px">Historial del taller</div>
+      ${log.length?log.slice(0,30).map(x=>`<div class="md-row">
+        <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${x.tipo||'Servicio'}</div>
+          <div style="font-size:11px;color:var(--ink3)">${fmtD(x.date)}${x.km?' · '+Number(x.km).toLocaleString('es-CO')+' km':''}</div></div>
+        <div style="font-size:12.5px;font-weight:600;white-space:nowrap">${x.costo?money(x.costo):'—'}</div>
+      </div>`).join(''):'<div style="font-size:12.5px;color:var(--ink2)">Sin servicios registrados.</div>'}
+    </div>`;
+}
+
+function mdDocs(b){
+  const chip=(ds)=>{
+    if(!ds)return '<span class="byny-estado" style="background:var(--dust-bg);color:var(--ink2)">Sin fecha</span>';
+    const d=Math.round((new Date(ds+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
+    const [bg,fg,t]=d<0?['var(--fire-bg)','var(--fire-deep)','Venció hace '+Math.abs(d)+'d']
+                 :d<=30?['var(--sun-bg)','var(--sun-text)','Vence en '+d+'d']
+                       :['var(--leaf-bg)','var(--leaf-deep)','Vence en '+d+'d'];
+    return `<span class="byny-estado" style="background:${bg};color:${fg}">${t}</span>`;
+  };
+  return `<div class="byny-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:12px">Documentos</div>
+    ${[['SOAT','soatDate','md-soat'],['Técnico-mecánica','tecnicaDate','md-tec']].map(([n,campo,id])=>`
+      <div style="padding:10px 0;border-bottom:1px solid var(--divider)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:12.5px;font-weight:600">${n}</span>${chip(b[campo])}</div>
+        <input type="date" class="md-input" id="${id}" value="${b[campo]||''}" onchange="guardarDoc('${b.id}','${campo}',this.value)">
+      </div>`).join('')}
+    <div style="font-size:11px;color:var(--ink3);margin-top:10px;line-height:1.5">
+      Escribe la fecha en que vence cada documento. La técnico-mecánica de una moto nueva se hace
+      por primera vez a los 2 años de la matrícula; después, cada año.</div>
+  </div>`;
+}
+function guardarDoc(id,campo,valor){
+  const b=(DB.bikes||[]).find(x=>x.id===id);if(!b)return;
+  b[campo]=valor||''; save(); renderMoto(); showSaved('Documento actualizado');
+}
+
+function mdDatosMoto(b){
+  const dig=digitoDeMoto(b);
+  const dias=dig?(pypMap()[parseInt(dig)]||[]).map(d=>PYP_DAY_NAMES[d]).join(' y '):'—';
+  return `<div class="byny-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:10px">Datos de la moto</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div style="font-size:11px;color:var(--ink2);margin-bottom:3px">Km actual</div>
+        <input type="number" class="md-input" value="${b.km||''}" onchange="campoMoto('${b.id}','km',this.value)"></div>
+      <div><div style="font-size:11px;color:var(--ink2);margin-bottom:3px">Km al día</div>
+        <input type="number" class="md-input" value="${b.kmpd||''}" onchange="campoMoto('${b.id}','kmpd',this.value)"></div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:11px;color:var(--ink2);margin-bottom:3px">Pico y placa</div>
+      <div class="md-mini"><b style="color:var(--ink)">${dias}</b> · 5:00 a. m. a 8:00 p. m.<br>
+        <span style="font-size:11px;color:var(--ink3)">Sale del primer número de la placa${dig?' ('+dig+')':''}. Rotación del 2º semestre 2026.</span></div>
+    </div>
+  </div>`;
+}
+function campoMoto(id,campo,valor){
+  const b=(DB.bikes||[]).find(x=>x.id===id);if(!b)return;
+  b[campo]=valor; save(); showSaved('Guardado');
+}
+
 function renderMoney(m){
   const el=document.getElementById('money-card');if(!el)return;
   const titulo=periodo==='mes'?'Neto de '+MESES[new Date(tod()+'T12:00:00').getMonth()]
@@ -4591,7 +5099,7 @@ function renderFlota(){
     </div>
     ${filas.length?filas.map(f=>{
       const [bg,fg,txt]=ESTADO_PILL[f.estado];
-      return `<div class="byny-row byny-grid" onclick="goTab('motos')">
+      return `<div class="byny-row byny-grid" onclick="abrirMoto('${f.id}')">
         <div style="font-size:12.5px;font-weight:700;letter-spacing:-.01em">${f.placa}</div>
         <div class="byny-hide-narrow" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.modelo}</div>
         <div style="font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.cliente||'—'}</div>
