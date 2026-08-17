@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.0 -->
+<!-- Byny Rental v5.1 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -739,7 +739,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.0</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v5.1</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -3974,13 +3974,18 @@ function construirLedger(desde,hasta){
   (DB.bikes||[]).forEach(b=>{try{ledgers[b.id]=buildDayLedger(b.id).ledger||{};}catch(e){ledgers[b.id]={};}});
 
   for(let ds=arranque; ds<=hasta; ds=sumaDias(ds,1)){
-    const ing=(pagos[ds]||[]).reduce((s,p)=>s+Number(p.amount||0),0);
+    // Un depósito de saldo inicial es caja que ya tenías, NO un arriendo cobrado:
+    // suma a "En caja" pero nunca a la entrada ni al neto del mes.
+    const delDia=(pagos[ds]||[]);
+    const esDeposito=p=>p.payType==='general'||(!p.bikeId&&p.generalType);
+    const ing=delDia.filter(p=>!esDeposito(p)).reduce((s,p)=>s+Number(p.amount||0),0);
+    const dep=delDia.filter(esDeposito).reduce((s,p)=>s+Number(p.amount||0),0);
     const gs=(gastos[ds]||[]);
     const gasto=gs.reduce((s,e)=>s+Number(e.amount||0),0);
     const g={mant:0,seguros:0,parq:0,multas:0,otros:0};
     gs.forEach(e=>{g[grupoDeGasto(e.cat)]+=Number(e.amount||0);});
     const ret=(retiros[ds]||[]).reduce((s,r)=>s+Number(r.amount||0),0);
-    acum+=ing-gasto-ret;
+    acum+=ing+dep-gasto-ret;
 
     if(ds<desde)continue;   // se acumula pero no se muestra
 
@@ -3998,7 +4003,7 @@ function construirLedger(desde,hasta){
         else if(day.status==='partial')mora+=((day.rate||Number(b.rate)||DR)-(day.amount||0));
       });
     });
-    filas.push({date:ds,ingreso:ing,gasto,g,retiro:ret,
+    filas.push({date:ds,ingreso:ing,deposito:dep,gasto,g,retiro:ret,
                 rentadas:activas.length,size,mora,acum,
                 util:size?activas.length/size:0});
   }
@@ -4259,6 +4264,35 @@ function renderMoney(m){
     <div class="byny-hr" style="font-size:12px;color:var(--ink2)">Sin gastos registrados en este periodo.</div>`}`;
 }
 
+// El hover NO re-renderiza la tarjeta: antes cada movimiento del ratón volvía a
+// pintarlo todo, lo que reiniciaba la animación de la línea y destruía el
+// elemento al que estaba enganchado el "mouseleave", así que el tooltip se
+// quedaba pegado en pantalla.
+let FLUJO=null;
+function hoverFlujo(i){
+  hoverBucket=i;
+  if(!FLUJO)return;
+  const tip=document.getElementById('flow-tip');
+  const plot=document.getElementById('flow-plot');
+  if(!tip||!plot)return;
+  plot.querySelectorAll('rect[data-bar]').forEach(r=>{
+    r.setAttribute('opacity', i===null||Number(r.dataset.bar)===i?1:0.34);
+  });
+  plot.querySelectorAll('rect[data-hit]').forEach(r=>{
+    r.setAttribute('fill', Number(r.dataset.hit)===i?'rgba(20,24,29,.035)':'transparent');
+  });
+  const b=i===null?null:FLUJO.buckets[i];
+  if(!b){tip.innerHTML='';return;}
+  const left=Math.max(2,Math.min(76,((FLUJO.PAD+i*FLUJO.slot+FLUJO.slot/2)/FLUJO.W)*100));
+  tip.innerHTML=`<div class="byny-tt" style="left:${left.toFixed(1)}%">
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)">${b.label}</div>
+    <div style="font-size:12px;color:#fff;margin-top:6px">+${money(b.ingreso)}</div>
+    <div style="font-size:12px;color:#FF9C86">−${money(b.gasto)}</div>
+    <div style="font-size:12px;color:#C4AEFF">${b.retiro?'Retiro '+money(b.retiro):'Sin retiros'}</div>
+    <div style="font-size:12px;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid #2A3138">En caja ${money(b.acum)}</div>
+  </div>`;
+}
+
 function renderFlujo(cur,nDias,desde,hasta){
   const el=document.getElementById('flow-card');if(!el)return;
   const grain=nDias<=35?'dia':nDias<=130?'semana':'mes';
@@ -4273,6 +4307,9 @@ function renderFlujo(cur,nDias,desde,hasta){
     if(last&&last.key===key){last.ingreso+=d.ingreso;last.gasto+=d.gasto;last.retiro+=d.retiro;last.acum=d.acum;}
     else buckets.push({key,label,ingreso:d.ingreso,gasto:d.gasto,retiro:d.retiro,acum:d.acum});
   });
+  // Sin movimientos en la ventana no hay nada que dibujar: una línea sola sobre
+  // una rejilla vacía se lee como un error, no como "no hay datos".
+  const hayMovimiento=cur.some(d=>d.ingreso||d.gasto||d.retiro);
   const W=720,H=210,PAD=24;
   const maxFlow=Math.max(1,...buckets.map(b=>Math.max(b.ingreso,b.gasto)));
   const slot=(W-PAD)/Math.max(1,buckets.length);
@@ -4287,13 +4324,13 @@ function renderFlujo(cur,nDias,desde,hasta){
     const x=PAD+i*slot+(slot-bw*2-2)/2;
     const inH=(b.ingreso/maxFlow)*(H-30), exH=(b.gasto/maxFlow)*(H-30);
     const op=hoverBucket===null||hoverBucket===i?1:0.34;
-    return `<rect x="${x.toFixed(1)}" y="${(H-inH).toFixed(1)}" width="${bw.toFixed(1)}" height="${inH.toFixed(1)}" rx="1.5" fill="var(--leaf)" opacity="${op}"/>
-            <rect x="${(x+bw+2).toFixed(1)}" y="${(H-exH).toFixed(1)}" width="${bw.toFixed(1)}" height="${exH.toFixed(1)}" rx="1.5" fill="var(--fire)" opacity="${op}"/>`;
+    return `<rect x="${x.toFixed(1)}" y="${(H-inH).toFixed(1)}" width="${bw.toFixed(1)}" height="${inH.toFixed(1)}" rx="1.5" fill="var(--leaf)" data-bar="${i}" opacity="${op}"/>
+            <rect x="${(x+bw+2).toFixed(1)}" y="${(H-exH).toFixed(1)}" width="${bw.toFixed(1)}" height="${exH.toFixed(1)}" rx="1.5" fill="var(--fire)" data-bar="${i}" opacity="${op}"/>`;
   }).join('');
   const hits=buckets.map((b,i)=>
     `<rect x="${(PAD+i*slot).toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${H}"
-       fill="${hoverBucket===i?'rgba(20,24,29,.035)':'transparent'}"
-       onmouseenter="hoverBucket=${i};renderInicio()"/>`).join('');
+       data-hit="${i}" fill="${hoverBucket===i?'rgba(20,24,29,.035)':'transparent'}"
+       onmouseenter="hoverFlujo(${i})"/>`).join('');
   const marcas=buckets.map((b,i)=>{
     if(!b.retiro)return '';
     const [x,y]=pts[i];
@@ -4305,20 +4342,20 @@ function renderFlujo(cur,nDias,desde,hasta){
     return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="var(--line2)" stroke-width="1"/>
             <text x="2" y="${y-4}" font-size="9" fill="var(--ink3)">${moneyK(v)}</text>`;}).join('');
 
-  let tip='';
-  if(hoverBucket!==null&&buckets[hoverBucket]){
-    const b=buckets[hoverBucket];
-    const leftPct=Math.max(2,Math.min(76,((PAD+hoverBucket*slot+slot/2)/W)*100));
-    tip=`<div class="byny-tt" style="left:${leftPct.toFixed(1)}%">
-      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)">${b.label}</div>
-      <div style="font-size:12px;color:#fff;margin-top:6px">+${money(b.ingreso)}</div>
-      <div style="font-size:12px;color:#FF9C86">−${money(b.gasto)}</div>
-      <div style="font-size:12px;color:#C4AEFF">${b.retiro?'Retiro '+money(b.retiro):'Sin retiros'}</div>
-      <div style="font-size:12px;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid #2A3138">En caja ${money(b.acum)}</div>
-    </div>`;
-  }
+  FLUJO={buckets,slot,PAD,W};
 
   el.style.padding='18px 20px 8px';
+  if(!hayMovimiento){
+    el.innerHTML=`
+      <div style="font-size:14px;font-weight:600">Flujo de caja</div>
+      <div style="font-size:11.5px;color:var(--ink2);margin-top:2px">${dLabel(desde)} — ${dLabel(hasta)} · ${nDias} días</div>
+      <div style="padding:46px 0 54px;text-align:center">
+        <div style="font-size:12.5px;color:var(--ink2)">Sin movimientos en este periodo.</div>
+        <div style="font-size:11.5px;color:var(--ink3);margin-top:4px">Los ingresos y gastos que registres aparecerán aquí.</div>
+      </div>`;
+    FLUJO=null;
+    return;
+  }
   el.innerHTML=`
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div><div style="font-size:14px;font-weight:600">Flujo de caja</div>
@@ -4330,8 +4367,8 @@ function renderFlujo(cur,nDias,desde,hasta){
         <span><i style="display:inline-block;width:14px;height:2px;background:var(--ink);margin-right:5px;vertical-align:middle"></i>Acumulado</span>
       </div>
     </div>
-    <div style="position:relative;margin-top:10px" onmouseleave="hoverBucket=null;renderInicio()">
-      ${tip}
+    <div style="position:relative;margin-top:10px" id="flow-plot" onmouseleave="hoverFlujo(null)">
+      <div id="flow-tip"></div>
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:210px;width:100%;display:block">
         ${grid}${barras}
         <path d="${smooth(pts,0.85)}" fill="none" stroke="var(--ink)" stroke-width="2"
