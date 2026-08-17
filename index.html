@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v6.0 -->
+<!-- Byny Rental v6.1 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -329,6 +329,31 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 .sheet-go:hover{background:var(--leaf)}
 .item-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;
   background:var(--surface2);border-radius:8px;margin-bottom:6px;font-size:12.5px}
+
+/* ═══ DINERO ═══ */
+.din-2up{display:grid;gap:16px;margin-top:16px}
+@media(min-width:1000px){.din-2up{grid-template-columns:1.15fr 1fr}}
+.casc{display:grid;gap:20px;margin-top:16px}
+@media(min-width:560px){.casc{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:860px){.casc{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.casc-l{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.casc-v{font-size:21px;font-weight:700;letter-spacing:-.03em;margin-top:4px}
+.casc-s{font-size:11px;color:var(--ink2);min-height:30px;margin-top:2px;line-height:1.4}
+.casc-plot{position:relative;height:150px;border-bottom:1px solid var(--line2);margin-top:6px}
+.casc-bar{position:absolute;left:0;right:0;border-radius:5px}
+.din-t{display:grid;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--divider);
+  grid-template-columns:110px minmax(0,1fr) 120px 120px 120px 130px}
+@media(max-width:1080px){.din-t{grid-template-columns:72px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+  .din-hide{display:none}}
+
+/* ═══ MOTOS ═══ */
+.mot-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.mot-tile{padding:14px 16px;border-radius:12px;border:1px solid var(--line2);background:var(--surface2)}
+.mot-tile-l{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);
+  display:flex;align-items:center;gap:6px}
+.mot-tile-v{font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:6px}
+.mot-dot{width:7px;height:7px;border-radius:50%}
+.mot-strip{width:3px;border-radius:2px;align-self:stretch;min-height:34px}
 
 /* ═══ SECTIONS ═══ */
 .sec{display:none}.sec.on{display:block}
@@ -828,7 +853,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v6.0</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v6.1</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -888,120 +913,27 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 
 <!-- ═══ MOTOS ═══ -->
 <div id="motos" class="sec">
-  <div class="subnav">
-    <button class="sub-tab on" data-sub="p-motos" onclick="goSub('motos','p-motos')">Motos</button>
-    <button class="sub-tab" data-sub="p-conductores" onclick="goSub('motos','p-conductores')">Conductores</button>
-    <button class="sub-tab" data-sub="p-contratos" onclick="goSub('motos','p-contratos')">Contratos</button>
+  <div id="mot-head"></div>
+  <div class="md-subnav" id="mot-subnav"></div>
+  <div class="byny-shell">
+    <div class="byny-main"><div class="byny-card byny-card-flush" id="mot-tabla"></div></div>
+    <aside class="byny-rail" id="mot-rail"></aside>
   </div>
-  <div id="p-motos" class="panel on">
-  <div class="sec-head">
-    <span class="sec-title">Mis motos</span>
-    <button class="btn sm" onclick="openM('bike-modal')">+ Agregar moto</button>
-  </div>
-  <div class="search-bar">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="bike-search" placeholder="Buscar por nombre, placa o arrendatario..." oninput="renderBikes()">
-  </div>
-  <div id="bikes-list"></div>
-  </div>
-  <div id="p-conductores" class="panel">
-  <div class="sec-head">
-    <span class="sec-title">Administración</span>
-    <button class="btn sm" onclick="openNewDriver()">+ Nuevo conductor</button>
-  </div>
-  <div id="admin-driver-list"></div>
-  <div id="admin-driver-profile" style="display:none"></div>
-  </div>
-  <div id="p-contratos" class="panel">
-  <div class="sec-head">
-    <span class="sec-title">Contratos</span>
-    <button class="btn sm" onclick="openM('contrato-modal')">+ Nuevo contrato</button>
-  </div>
-  <div id="contratos-list"></div>
+  <div id="mot-legacy" style="display:none">
+    <div id="admin-driver-list"></div><div id="admin-driver-profile" style="display:none"></div>
+    <div id="contratos-list"></div><div id="bikes-list"></div>
   </div>
 </div>
 
 <!-- ═══ DINERO ═══ -->
 <div id="dinero" class="sec">
-  <div class="subnav">
-    <button class="sub-tab on" data-sub="p-pagos" onclick="goSub('dinero','p-pagos')">Pagos</button>
-    <button class="sub-tab" data-sub="p-gastos" onclick="goSub('dinero','p-gastos')">Gastos</button>
-    <button class="sub-tab" data-sub="p-retiros" onclick="goSub('dinero','p-retiros')">Retiros</button>
-    <button class="sub-tab" data-sub="p-resumen" onclick="goSub('dinero','p-resumen')">Resumen</button>
-  </div>
-  <div id="p-pagos" class="panel on">
-  <div class="search-bar">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="mov-search" placeholder="Buscar por placa, arrendatario, fecha (ej: 2026-03) o monto..." oninput="renderAllTx()">
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title" id="movs-count">Todos los pagos</span></div>
-    <div id="all-tx"></div>
-  </div>
-  </div>
-  <div id="p-gastos" class="panel">
-  <div class="sec-head">
-    <span class="sec-title">Gastos</span>
-    <button class="btn sm" onclick="openM('exp-modal')">+ Agregar gasto</button>
-  </div>
-  <div class="date-range-bar" style="margin-bottom:.75rem">
-    <label>Desde</label>
-    <input type="date" id="exp-from" onchange="expFrom=this.value;render()">
-    <span class="sep">—</span>
-    <label>Hasta</label>
-    <input type="date" id="exp-to" onchange="expTo=this.value;render()">
-    <button class="btn xs ghost" onclick="clearExpRange()">Todo</button>
-  </div>
-  <div class="cat-pills" id="cat-filter-pills"></div>
-  <div class="card" style="margin-bottom:1rem">
-    <div class="card-head"><span class="card-title">Distribución de gastos</span></div>
-    <div id="pie-chart-wrap"></div>
-  </div>
-  <div class="card"><div id="exp-list"></div></div>
-  </div>
-  <div id="p-retiros" class="panel">
-  <div class="sec-head">
-    <span class="sec-title">Retiros del dueño</span>
-    <button class="btn sm" onclick="openM('retiro-modal')">+ Agregar retiro</button>
-  </div>
-  <div class="alert sun" style="margin-bottom:1rem;font-size:12px;font-weight:500">Los retiros no afectan la ganancia bruta. Se muestran por separado para saber cuánto queda en caja.</div>
-  <div class="kpi-grid" id="retiro-kpis"></div>
-  <div class="card"><div id="retiro-list"></div></div>
-  </div>
-  <div id="p-resumen" class="panel">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
-    <button class="btn sm" onclick="exportPDF()">⬇ Exportar PDF del mes</button>
-  </div>
-  <div class="kpi-grid" id="fin-kpis"></div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Ingresos vs Gastos — últimos 6 meses</span></div>
-    <div id="trend-chart"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Mes a mes — ingresos vs gastos</span></div>
-    <div id="month-history"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Rentabilidad por moto — histórico</span></div>
-    <div id="profitability-chart"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Historial de arrendatarios</span></div>
-    <div id="renter-history-list"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">Utilización por moto</span></div>
-    <div class="date-range-bar">
-      <label>Desde</label>
-      <input type="date" id="util-from" onchange="utilFrom=this.value;renderUtilBreakdown()">
-      <span class="sep">—</span>
-      <label>Hasta</label>
-      <input type="date" id="util-to" onchange="utilTo=this.value;renderUtilBreakdown()">
-      <button class="btn xs ghost" onclick="clearUtilRange()">Este mes</button>
-    </div>
-    <div id="util-breakdown"></div>
-  </div>
-  </div>
+  <div id="din-head"></div>
+  <div id="din-cascada"></div>
+  <div id="din-flujo" class="byny-card" style="margin-top:16px"></div>
+  <div id="din-dos" class="din-2up"></div>
+  <div id="din-tres" class="din-2up"></div>
+  <div id="din-movs" class="byny-card" style="margin-top:16px"></div>
+  <div id="din-detalle" style="margin-top:16px"></div>
 </div>
 
 <!-- ═══ AJUSTES ═══ -->
@@ -4208,6 +4140,7 @@ function render(){
   renderFirstRun();renderAdmin();
   renderInicio();
   renderBikes();renderAllTx();renderExpenses();renderCatFilterPills();
+  renderDinero();renderMotos();
   renderFinance();
   renderPieChart();
   renderRetiros();
@@ -5203,6 +5136,453 @@ function guardarEntrega(){
   save();cerrarSheet();
   showSaved(b.name+' entregada a '+b.renter+' · '+money(tarifa)+' al día');
   abrirMoto(b.id);
+}
+
+// ═══════════ DINERO ═══════════
+// Devengado: sólo días facturables, sumando la tarifa de CADA día.
+// No es rentadas × tarifa × días (reglas 2, 3 y 6).
+function devengadoPeriodo(desde,hasta){
+  let total=0;
+  (DB.bikes||[]).forEach(b=>{
+    if(!b.renter||!b.startDate)return;
+    let L={};try{L=buildDayLedger(b.id).ledger||{};}catch(e){}
+    for(let ds=desde>b.startDate?desde:b.startDate; ds<=hasta; ds=sumaDias(ds,1)){
+      if(esFacturable(b,ds,L))total+=getBikeRateForDate(b,ds);
+    }
+  });
+  return total;
+}
+
+// Las listas individuales siguen accesibles: es donde se borra un registro.
+function detalleMovimientos(){
+  return `<details style="margin-top:4px">
+    <summary style="cursor:pointer;font-size:12.5px;color:var(--ink2);padding:10px 0">Ver y editar registros uno por uno</summary>
+    <div class="byny-card" style="margin-top:8px"><div id="all-tx"></div></div>
+    <div class="byny-card" style="margin-top:12px"><div id="exp-list"></div></div>
+    <div class="byny-card" style="margin-top:12px"><div id="retiro-list"></div></div>
+  </details>`;
+}
+
+function renderDinero(){
+  if(!document.getElementById('din-cascada'))return;
+  const [desde,hasta]=ventana();
+  const cur=construirLedger(desde,hasta);
+  const nDias=diasEntre(desde,hasta);
+  const entrada=cur.reduce((s,d)=>s+d.ingreso,0);
+  const deposito=cur.reduce((s,d)=>s+(d.deposito||0),0);
+  const gastos=cur.reduce((s,d)=>s+d.gasto,0);
+  const retiros=cur.reduce((s,d)=>s+d.retiro,0);
+  const caja=cur.length?cur[cur.length-1].acum:0;
+  const cajaIni=caja-(entrada+deposito-gastos-retiros);
+  const neto=entrada-gastos;
+  const margen=entrada?Math.round(neto/entrada*100):0;
+  const flota=estadoFlota();
+
+  document.getElementById('din-head').innerHTML=`
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+      <div><div style="font-size:22px;font-weight:700;letter-spacing:-.02em">Dinero</div>
+        <div style="font-size:12.5px;color:var(--ink2);margin-top:2px">${dLabel(desde)} — ${dLabel(hasta)} · ${nDias} días</div></div>
+      <div style="font-size:11.5px;color:var(--ink3)">${flota.length} motos · ${flota.filter(f=>f.estado!=='libre').length} rodando · cerrado al ${dLabel(hasta)}</div>
+    </div>`;
+
+  // ── 1. Cascada: tiene que cerrar exactamente ──
+  const escala=Math.max(1,cajaIni+entrada+deposito);
+  const pasos=[
+    ['Saldo anterior',cajaIni,0,cajaIni,'var(--ink4)','Lo que había en caja al empezar',true],
+    ['Entrada',entrada+deposito,cajaIni,cajaIni+entrada+deposito,'var(--leaf)',
+      deposito?money(entrada)+' de arriendos · '+money(deposito)+' de saldo inicial':'Arriendos cobrados',false],
+    ['Gastos',gastos,cajaIni+entrada+deposito-gastos,cajaIni+entrada+deposito,'var(--fire)',
+      entrada?Math.round(gastos/entrada*100)+'% de la entrada':'Sin entrada en el periodo',false],
+    ['Retiros',retiros,cajaIni+entrada+deposito-gastos-retiros,cajaIni+entrada+deposito-gastos,'var(--violet-text)',
+      (cur.filter(d=>d.retiro).length||'Ninguna')+' salida'+(cur.filter(d=>d.retiro).length===1?'':'s')+' de caja',false],
+    ['En caja',caja,0,caja,'var(--ink)','Saldo al '+dLabel(hasta),true]
+  ];
+  document.getElementById('din-cascada').innerHTML=`
+    <div class="byny-card" style="border-radius:14px;padding:20px 22px 22px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:600">De lo que había a lo que queda</span>
+        <span style="font-size:11.5px;color:var(--ink2)">${money(neto)} neto · margen del ${margen}%</span>
+      </div>
+      <div class="casc">
+        ${pasos.map(([l,v,lo,hi,c,sub,total])=>{
+          const top=(1-Math.max(lo,hi)/escala)*150;
+          const alto=Math.max(4,Math.abs(hi-lo)/escala*150);
+          return `<div>
+            <div class="casc-l">${l}</div>
+            <div class="casc-v" style="color:${c}">${money(v)}</div>
+            <div class="casc-s">${sub}</div>
+            <div class="casc-plot"><div class="casc-bar" style="top:${top.toFixed(1)}px;height:${alto.toFixed(1)}px;background:${c};opacity:${total?1:.88}"></div></div>
+          </div>`;}).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:12px">
+        ${money(cajaIni)} + ${money(entrada+deposito)} − ${money(gastos)} − ${money(retiros)} = <b style="color:var(--ink)">${money(caja)}</b>
+      </div>
+    </div>`;
+
+  // ── 2. El mismo flujo del Inicio ──
+  const guardar=document.getElementById('flow-card');
+  const destino=document.getElementById('din-flujo');
+  destino.id='flow-card'; if(guardar)guardar.id='flow-card-inicio';
+  renderFlujo(cur,nDias,desde,hasta);
+  destino.id='din-flujo'; if(guardar)guardar.id='flow-card';
+
+  renderDineroDos(cur,desde,hasta,entrada,gastos,nDias);
+  renderDineroTres(cur,desde,hasta,retiros);
+  renderMovimientos(cur);
+  document.getElementById('din-detalle').innerHTML=detalleMovimientos();
+}
+
+function renderDineroDos(cur,desde,hasta,entrada,gastos,nDias){
+  const grupos=Object.keys(GRUPOS_GASTO).map(k=>({k,...GRUPOS_GASTO[k],
+      total:cur.reduce((s,d)=>s+d.g[k],0)})).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
+  const totalG=grupos.reduce((s,x)=>s+x.total,0);
+  const devengado=devengadoPeriodo(desde,hasta);
+  const pct=devengado?Math.round(entrada/devengado*100):0;
+  const veredicto=pct>=90?'Buen recaudo para el periodo'
+                 :pct>=80?'Se queda algo sin cobrar cada día'
+                         :'Está entrando bastante menos de lo que se causa';
+  const enMora=estadoFlota().filter(f=>f.debe>0);
+  const porCobrar=enMora.reduce((s,f)=>s+f.debe,0);
+  document.getElementById('din-dos').innerHTML=`
+    <div class="byny-card">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:600">En qué se fue la plata</span>
+        <span style="font-size:11.5px;color:var(--ink2)">${money(nDias?gastos/nDias:0)} al día</span></div>
+      ${totalG?`<div class="byny-sharebar" style="height:10px;margin-top:12px">
+          ${grupos.map(g=>`<span style="width:${(g.total/totalG*100).toFixed(1)}%;background:${g.color}"></span>`).join('')}</div>
+        <div style="margin-top:8px">
+          ${grupos.map(g=>`<div class="byny-legend-row">
+            <span class="byny-chip" style="background:${g.color}"></span>
+            <span style="font-size:12px">${g.label}</span>
+            <span style="font-size:12px;font-weight:600;text-align:right;white-space:nowrap">${money(g.total)}</span>
+            <span style="font-size:11px;color:var(--ink3);text-align:right">${Math.round(g.total/totalG*100)}%</span>
+          </div>`).join('')}</div>`
+        :`<div style="font-size:12.5px;color:var(--ink2);margin-top:12px">Sin gastos en este periodo.</div>`}
+    </div>
+    <div class="byny-card">
+      <div style="font-size:14px;font-weight:600">Qué tan bien se cobró</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:12px">
+        <span style="font-size:32px;font-weight:700;color:var(--leaf-deep);letter-spacing:-.03em">${pct}%</span>
+        <span style="font-size:12px;color:var(--ink2);line-height:1.4">${veredicto}</span>
+      </div>
+      <div class="md-bar" style="height:8px;margin-top:10px"><span style="width:${Math.min(100,pct)}%;background:var(--leaf)"></span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+        ${[['Devengado',devengado,'Arriendos que se causaron'],
+           ['Cobrado',entrada,'Lo que sí entró'],
+           ['Quedó debiendo',Math.max(0,devengado-entrada),'Se suma a por cobrar'],
+           ['Por cobrar hoy',porCobrar,enMora.length+(enMora.length===1?' conductor en mora':' conductores en mora')]]
+          .map(([l,v,s])=>`<div class="md-stat"><div class="md-stat-l">${l}</div>
+            <div class="md-stat-v" style="font-size:16px">${money(v)}</div>
+            <div class="md-stat-s">${s}</div></div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderDineroTres(cur,desde,hasta,retirosTotal){
+  const rets=(DB.retiros||[]).filter(r=>r.date>=desde&&r.date<=hasta)
+                             .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const porMotivo={};
+  rets.forEach(r=>{const m=r.motivo||r.type||'otro';porMotivo[m]=(porMotivo[m]||0)+Number(r.amount||0);});
+  const rampa=['#7C5CD6','#A98BFF','#C9B6F5','#5CC8FF','#9AA5AE','#DFD2F7'];
+  const motivos=Object.keys(porMotivo).sort((a,b)=>porMotivo[b]-porMotivo[a]);
+  const nombreMotivo=k=>(MOTIVOS_RETIRO.find(m=>m[0]===k)||[,k])[1];
+
+  const aj=(DB.ajustes||[]).filter(a=>(a.fecha||'')>=desde&&(a.fecha||'')<=hasta)
+                           .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const totalAj=aj.reduce((s,a)=>s+Number(a.monto||0),0);
+
+  document.getElementById('din-tres').innerHTML=`
+    <div class="byny-card">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+        <span style="font-size:14px;font-weight:600">Retiros registrados</span>
+        <span style="font-size:17px;font-weight:700;color:var(--violet-text)">${money(retirosTotal)}</span></div>
+      <div style="font-size:11.5px;color:var(--ink2);margin-top:2px">Plata que salió de caja sin ser un gasto de la operación.</div>
+      ${motivos.length?`<div style="margin-top:12px">
+        ${motivos.map((m,i)=>`<div style="margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:3px">
+            <span><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${rampa[i%rampa.length]};margin-right:6px"></i>${nombreMotivo(m)}</span>
+            <span style="font-weight:600">${money(porMotivo[m])}</span></div>
+          <div class="md-bar" style="height:5px"><span style="width:${(porMotivo[m]/retirosTotal*100).toFixed(1)}%;background:${rampa[i%rampa.length]}"></span></div>
+        </div>`).join('')}
+        <div style="margin-top:12px">${rets.map(r=>`<div class="md-row">
+          <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${nombreMotivo(r.motivo||r.type||'otro')}</div>
+            <div style="font-size:11px;color:var(--ink3)">${fmtD(r.date)}${r.note?' · '+r.note:''}</div></div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--violet-text);white-space:nowrap">${money(r.amount)}</div>
+        </div>`).join('')}</div>`
+      :`<div style="font-size:12.5px;color:var(--ink2);margin-top:12px">Sin retiros en este periodo.</div>`}
+    </div>
+    <div class="byny-card">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+        <span style="font-size:14px;font-weight:600">Arreglos que pagó el conductor</span>
+        <span style="font-size:17px;font-weight:700;color:var(--leaf-deep)">${totalAj?'−'+money(totalAj):money(0)}</span></div>
+      <div style="font-size:11.5px;color:var(--ink2);margin-top:2px">Bajan lo que deben. La caja no se mueve.</div>
+      <div style="margin-top:12px">
+        ${aj.length?aj.map(a=>{const b=(DB.bikes||[]).find(x=>x.id===a.bikeId);
+          return `<div class="md-row" style="cursor:pointer" onclick="abrirMoto('${a.bikeId}')">
+            <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${a.concepto}</div>
+              <div style="font-size:11px;color:var(--ink3)">${fmtD(a.fecha)}${b?' · '+(b.renter||'')+' · '+b.name:''}</div></div>
+            <div style="font-size:12.5px;font-weight:600;color:var(--leaf-deep);white-space:nowrap">−${money(a.monto)}</div>
+          </div>`;}).join('')
+        :`<div style="font-size:12.5px;color:var(--ink2)">Todavía no hay arreglos pagados por conductores.</div>`}
+      </div>
+    </div>`;
+}
+
+function renderMovimientos(cur){
+  const filas=[...cur].filter(d=>d.ingreso||d.gasto||d.retiro||d.deposito).reverse();
+  document.getElementById('din-movs').innerHTML=`
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">Movimientos día por día</div>
+    <div style="font-size:11.5px;color:var(--ink2);margin-bottom:10px">Del más reciente al más antiguo</div>
+    <div class="din-t" style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--line2)">
+      <div>Fecha</div><div class="din-hide">Detalle</div>
+      <div style="text-align:right">Entrada</div><div class="din-hide" style="text-align:right">Salida</div>
+      <div style="text-align:right">Retiro</div><div style="text-align:right">Saldo</div>
+    </div>
+    ${filas.length?filas.map(d=>{
+      const partes=[];
+      if(d.ingreso)partes.push('arriendos cobrados');
+      if(d.deposito)partes.push('saldo inicial');
+      Object.keys(GRUPOS_GASTO).forEach(k=>{if(d.g[k])partes.push(GRUPOS_GASTO[k].label.toLowerCase());});
+      if(d.retiro)partes.push('retiro');
+      return `<div class="din-t">
+        <div style="font-size:12px">${dLabel(d.date)}</div>
+        <div class="din-hide" style="font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${partes.join(' · ')||'—'}</div>
+        <div style="text-align:right;font-size:12.5px;color:var(--leaf-deep)">${d.ingreso+d.deposito?money(d.ingreso+d.deposito):'—'}</div>
+        <div class="din-hide" style="text-align:right;font-size:12.5px;color:var(--fire-deep)">${d.gasto?money(d.gasto):'—'}</div>
+        <div style="text-align:right;font-size:12.5px;color:var(--violet-text)">${d.retiro?money(d.retiro):'—'}</div>
+        <div style="text-align:right;font-size:12.5px;font-weight:700">${money(d.acum)}</div>
+      </div>`;}).join('')
+    :`<div style="padding:20px 0;text-align:center;font-size:12.5px;color:var(--ink2)">Sin movimientos en este periodo.</div>`}`;
+}
+
+// ═══════════ MOTOS ═══════════
+let motSub='motos', motOrden='placa', motLimite=20;
+
+function renderMotos(){
+  if(!document.getElementById('mot-head'))return;
+  const flota=estadoFlota();
+  const c={todas:flota.length,rentada:0,libre:0,taller:0,mora:0};
+  flota.forEach(f=>c[f.estado]++);
+  const docs=(DB.bikes||[]).reduce((n,b)=>{
+    return n+[['soatDate'],['tecnicaDate']].filter(([k])=>{
+      if(!b[k])return false;
+      const d=Math.round((new Date(b[k]+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
+      return d<=30;}).length;},0);
+
+  document.getElementById('mot-head').innerHTML=`
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div><div style="font-size:22px;font-weight:700;letter-spacing:-.02em">Motos</div>
+        <div style="font-size:12.5px;color:var(--ink2);margin-top:2px">
+          ${flota.length} moto${flota.length===1?'':'s'} · ${c.rentada+c.mora} rentada${c.rentada+c.mora===1?'':'s'}, ${c.libre} libre${c.libre===1?'':'s'}${c.taller?', '+c.taller+' en taller':''}</div></div>
+    </div>
+    <div class="mot-tiles">
+      ${[['Flota',flota.length,'var(--ink3)','var(--surface2)','var(--ink)'],
+         ['Rodando',c.rentada+c.mora,'var(--leaf)','var(--leaf-surface)','var(--leaf-deep)'],
+         ['En mora',c.mora,'var(--fire)','var(--fire-surface)','var(--fire-deep)'],
+         ['Docs por vencer',docs,'var(--sun)','#FFFBF2','var(--sun-text)']]
+        .map(([l,v,dot,bg,col])=>`<div class="mot-tile" style="background:${bg}">
+          <div class="mot-tile-l"><span class="mot-dot" style="background:${dot}"></span>${l}</div>
+          <div class="mot-tile-v" style="color:${col}">${v}</div></div>`).join('')}
+    </div>`;
+
+  document.getElementById('mot-subnav').innerHTML=
+    [['motos','Motos'],['conductores','Conductores'],['compra','Compra de moto']]
+    .map(([k,t])=>`<button class="md-tab${motSub===k?' on':''}" onclick="motGo('${k}')">${t}</button>`).join('');
+
+  if(motSub==='motos')motTablaMotos(flota,c);
+  else if(motSub==='conductores')motTablaConductores();
+  else motTablaCompra();
+}
+function motGo(k){motSub=k;motLimite=20;renderMotos();}
+function motOrdenar(k){motOrden=k;renderMotos();}
+
+function motTablaMotos(flota,c){
+  const q=buscaFlota.trim().toLowerCase();
+  let filas=flota.filter(f=>filtroFlota==='todas'||f.estado===filtroFlota);
+  if(q)filas=filas.filter(f=>(f.placa+' '+(f.cliente||'')+' '+f.modelo).toLowerCase().includes(q));
+  filas.sort((a,b)=> motOrden==='debe'?b.debe-a.debe
+                   : motOrden==='mes'?b.mes-a.mes
+                   : motOrden==='estado'?a.estado.localeCompare(b.estado)
+                   : a.placa.localeCompare(b.placa));
+  const total=filas.length;
+  const vista=filas.slice(0,motLimite);
+  const hoy=tod(), lunes=sumaDias(hoy,-diaSemana(hoy));
+  const cab=DIAS.map((d,i)=>{const ds=sumaDias(lunes,i);const es=ds===hoy;
+    return `<div style="width:12px;text-align:center"><div style="color:${es?'var(--ink)':'var(--ink3)'}">${d[0]}</div>
+      <div style="color:${es?'var(--ink)':'var(--ink4)'}">${new Date(ds+'T12:00:00').getDate()}</div></div>`;}).join('');
+
+  document.getElementById('mot-tabla').innerHTML=`
+    <div class="byny-toolbar">
+      ${[['todas','Todas'],['rentada','Rentadas'],['libre','Libres'],['taller','Taller'],['mora','En mora']]
+        .map(([k,t])=>`<button class="byny-fchip${filtroFlota===k?' on':''}" onclick="setFiltroFlota('${k}');renderMotos()">${t} <span style="opacity:.6">${c[k]}</span></button>`).join('')}
+      <span style="font-size:11.5px;color:var(--ink3);margin-left:4px">Ordenar por</span>
+      ${[['placa','Placa'],['debe','Debe'],['mes','Ingreso'],['estado','Estado']]
+        .map(([k,t])=>`<button class="byny-fchip${motOrden===k?' on':''}" onclick="motOrdenar('${k}')">${t}</button>`).join('')}
+      <div style="flex:1"></div>
+      <input class="byny-search" placeholder="Buscar placa o cliente" value="${buscaFlota.replace(/"/g,'&quot;')}"
+             oninput="buscaFlota=this.value;renderMotos()">
+    </div>
+    <div class="byny-thead byny-grid" style="padding-left:23px">
+      <div>Placa</div><div class="byny-hide-narrow">Modelo</div><div>Cliente</div><div>Estado</div>
+      <div class="byny-hide-narrow" style="display:flex;gap:3px">${cab}</div>
+      <div class="byny-hide-narrow" style="text-align:right">Mes</div><div style="text-align:right">Debe</div>
+    </div>
+    ${vista.length?vista.map(f=>{
+      const [bg,fg,txt]=ESTADO_PILL[f.estado];
+      const tono={rentada:'var(--leaf)',libre:'var(--ink4)',taller:'var(--sun)',mora:'var(--fire)'}[f.estado];
+      return `<div style="display:flex;gap:8px;align-items:stretch;padding-left:8px;cursor:pointer" class="byny-row" onclick="abrirMoto('${f.id}')">
+        <span class="mot-strip" style="background:${tono}"></span>
+        <div class="byny-grid" style="flex:1;min-width:0">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:-.01em">${f.placa}</div>
+          <div class="byny-hide-narrow" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.modelo}</div>
+          <div style="font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.cliente||'—'}</div>
+          <div><span class="byny-estado" style="background:${bg};color:${fg}">${txt}</span></div>
+          <div class="byny-hide-narrow byny-week">${f.week.map(d=>
+            `<span class="byny-day" style="background:${COLOR_DIA[d.e]||COLOR_ESTADO[d.e][0]}" title="${DIAS[diaSemana(d.ds)]} ${dLabel(d.ds)} · ${NOMBRE_ESTADO[d.e]||NOMBRE_DIA[d.e]}"></span>`).join('')}</div>
+          <div class="byny-hide-narrow" style="font-size:12.5px;text-align:right">${f.mes?money(f.mes):'—'}</div>
+          <div style="font-size:12.5px;text-align:right;${f.debe?'color:var(--fire);font-weight:700':'color:var(--ink4)'}">${f.debe?money(f.debe):'—'}</div>
+        </div></div>`;}).join('')
+      :`<div style="padding:28px 20px;text-align:center;font-size:12.5px;color:var(--ink2)">Ninguna moto coincide con ese filtro.</div>`}
+    <div class="byny-tfoot">
+      <span>Mostrando ${vista.length} de ${total} motos</span>
+      ${total>motLimite?`<button class="byny-fchip" onclick="motLimite+=20;renderMotos()">Cargar más</button>`:
+        `<span style="display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px">
+          ${['pago','gracia','pyp','pendiente','libre'].map(k=>
+            `<span><i style="display:inline-block;width:8px;height:12px;border-radius:2px;background:${COLOR_ESTADO[k][0]};margin-right:4px;vertical-align:middle"></i>${NOMBRE_ESTADO[k]}</span>`).join('')}</span>`}
+    </div>`;
+  motRailMotos(flota,c);
+}
+
+function motRailMotos(flota,c){
+  const deudores=flota.filter(f=>f.debe>0).sort((a,b)=>b.debe-a.debe).slice(0,5);
+  const maxD=deudores.length?deudores[0].debe:1;
+  const vencen=[];
+  (DB.bikes||[]).forEach(b=>[['soatDate','SOAT'],['tecnicaDate','Técnico-mecánica']].forEach(([k,n])=>{
+    if(!b[k])return;
+    const d=Math.round((new Date(b[k]+'T12:00:00')-new Date(tod()+'T12:00:00'))/86400000);
+    if(d<=30)vencen.push({moto:b.name,n,d});}));
+  document.getElementById('mot-rail').innerHTML=`
+    <div class="byny-card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Estado de la flota</div>
+      ${[['rentada','Rentadas','var(--leaf)'],['mora','En mora','var(--fire)'],
+         ['libre','Libres','var(--ink4)'],['taller','En taller','var(--sun)']].map(([k,l,col])=>`
+        <div style="margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${l}</span><span style="font-weight:600">${c[k]}</span></div>
+          <div class="md-bar" style="height:5px"><span style="width:${flota.length?c[k]/flota.length*100:0}%;background:${col}"></span></div>
+        </div>`).join('')}
+    </div>
+    <div class="byny-card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Quién debe más</div>
+      ${deudores.length?deudores.map(f=>`<div style="margin-bottom:9px;cursor:pointer" onclick="abrirMoto('${f.id}')">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;margin-bottom:3px">
+          <span style="font-weight:700">${f.placa}</span><span style="color:var(--ink2)">${money(f.debe)}</span></div>
+        <div class="md-bar" style="height:5px"><span style="width:${(f.debe/maxD*100).toFixed(0)}%;background:var(--fire)"></span></div>
+      </div>`).join(''):'<div style="font-size:12px;color:var(--ink2)">Nadie debe nada.</div>'}
+    </div>
+    <div class="byny-card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Documentos por vencer</div>
+      ${vencen.length?vencen.map(v=>`<div class="md-row">
+        <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">${v.moto}</div>
+          <div style="font-size:11px;color:var(--ink3)">${v.n}</div></div>
+        <div style="font-size:11.5px;font-weight:600;color:${v.d<0?'var(--fire)':'var(--sun-text)'};white-space:nowrap">
+          ${v.d<0?'venció hace '+Math.abs(v.d)+'d':'en '+v.d+'d'}</div>
+      </div>`).join(''):'<div style="font-size:12px;color:var(--ink2)">Todo al día.</div>'}
+    </div>`;
+}
+
+function motTablaConductores(){
+  const conductores=(DB.drivers||[]).filter(d=>d.active!==false);
+  const filas=conductores.map(d=>{
+    const motos=(DB.bikes||[]).filter(b=>b.driverId===d.id||
+      (b.renter&&b.renter.toLowerCase()===`${d.fname||''} ${d.lname||''}`.trim().toLowerCase()));
+    const debe=motos.reduce((s,b)=>s+Math.max(0,calcBikeBalance(b)),0);
+    const pagado=motos.reduce((s,b)=>s+(DB.payments||[]).filter(p=>p.bikeId===b.id&&p.payType!=='purchase')
+      .reduce((t,p)=>t+Number(p.amount||0),0),0);
+    return {d,motos,debe,pagado,
+      nombre:`${d.fname||''} ${d.lname||''}`.trim()||'Sin nombre',
+      estado:debe>0?'mora':motos.length?'rentada':'libre'};
+  });
+  document.getElementById('mot-tabla').innerHTML=`
+    <div class="byny-toolbar"><span style="font-size:14px;font-weight:600">Conductores</span>
+      <div style="flex:1"></div>
+      <button class="byny-fchip" onclick="openNewDriver()">+ Nuevo conductor</button></div>
+    <div class="byny-thead" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 96px 80px 110px;gap:10px">
+      <div>Conductor</div><div class="byny-hide-narrow">Moto</div><div>Estado</div><div style="text-align:right">Motos</div><div style="text-align:right">Pagado</div>
+    </div>
+    ${filas.length?filas.map(f=>{const [bg,fg,txt]=ESTADO_PILL[f.estado];
+      return `<div class="byny-row" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 96px 80px 110px;gap:10px"
+        onclick="${f.motos.length?`abrirMoto('${f.motos[0].id}')`:`showDriverProfile('${f.d.id}')`}">
+        <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.nombre}</div>
+          <div style="font-size:11px;color:var(--ink3)">${f.d.cc?'CC '+f.d.cc:(f.d.phone||'')}</div></div>
+        <div class="byny-hide-narrow" style="font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.motos.map(m=>m.name).join(', ')||'—'}</div>
+        <div><span class="byny-estado" style="background:${bg};color:${fg}">${txt}</span></div>
+        <div style="text-align:right;font-size:12.5px">${f.motos.length}</div>
+        <div style="text-align:right;font-size:12.5px;font-weight:600">${money(f.pagado)}</div>
+      </div>`;}).join('')
+    :`<div style="padding:28px 20px;text-align:center;font-size:12.5px;color:var(--ink2)">Todavía no hay conductores.</div>`}
+    <div class="byny-tfoot"><span>${filas.length} conductor${filas.length===1?'':'es'}</span></div>`;
+  const alDia=filas.filter(f=>f.debe===0).length;
+  document.getElementById('mot-rail').innerHTML=`
+    <div class="byny-card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Cómo van pagando</div>
+      ${[['Al día',alDia,'var(--leaf)'],['En mora',filas.length-alDia,'var(--fire)']].map(([l,v,c])=>`
+        <div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${l}</span><span style="font-weight:600">${v}</span></div>
+        <div class="md-bar" style="height:5px"><span style="width:${filas.length?v/filas.length*100:0}%;background:${c}"></span></div></div>`).join('')}
+    </div>
+    <div class="byny-card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Quién ha pagado más</div>
+      ${(()=>{const t=[...filas].sort((a,b)=>b.pagado-a.pagado).slice(0,5);const mx=t.length?t[0].pagado||1:1;
+        return t.length?t.map(f=>`<div style="margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;margin-bottom:3px">
+            <span style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.nombre}</span><span style="color:var(--ink2)">${money(f.pagado)}</span></div>
+          <div class="md-bar" style="height:5px"><span style="width:${(f.pagado/mx*100).toFixed(0)}%;background:var(--leaf)"></span></div>
+        </div>`).join(''):'<div style="font-size:12px;color:var(--ink2)">Sin pagos todavía.</div>';})()}
+    </div>`;
+}
+
+function motTablaCompra(){
+  const conPlan=(DB.bikes||[]).filter(b=>b.renter&&(b.precio||b.plan));
+  const filas=conPlan.map(b=>{
+    // Regla 8: el saldo sale de lo ABONADO, no del abono pactado.
+    const abonado=(DB.payments||[]).filter(p=>p.bikeId===b.id&&p.payType==='purchase')
+      .reduce((s,p)=>s+Number(p.amount||0),0);
+    const precio=Number(b.precio)||0;
+    return {b,abonado,precio,pct:precio?Math.min(100,abonado/precio*100):0};
+  });
+  document.getElementById('mot-tabla').innerHTML=`
+    <div class="byny-toolbar"><span style="font-size:14px;font-weight:600">Compra de moto</span>
+      <div style="flex:1"></div>
+      <span style="font-size:11.5px;color:var(--ink3)">Sólo conductores que están abonando</span></div>
+    ${filas.length?`
+      <div class="byny-thead" style="display:grid;grid-template-columns:minmax(0,1.2fr) 96px 110px minmax(0,1fr);gap:10px">
+        <div>Conductor</div><div>Moto</div><div style="text-align:right">Abonado</div><div>Avance</div></div>
+      ${filas.map(f=>`<div class="byny-row" style="display:grid;grid-template-columns:minmax(0,1.2fr) 96px 110px minmax(0,1fr);gap:10px"
+          onclick="abrirMoto('${f.b.id}')">
+        <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.b.renter}</div>
+        <div style="font-size:12.5px">${f.b.name}</div>
+        <div style="text-align:right;font-size:12.5px;font-weight:600">${money(f.abonado)}</div>
+        <div><div class="md-bar" style="height:8px;background:#DFD2F7"><span style="width:${f.pct.toFixed(0)}%;background:#6B45C7"></span></div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:3px">${f.pct.toFixed(0)}% de ${money(f.precio)}</div></div>
+      </div>`).join('')}`
+    :`<div style="padding:32px 20px;text-align:center">
+        <div style="font-size:13px;font-weight:600">Nadie está abonando todavía</div>
+        <div style="font-size:12.5px;color:var(--ink2);margin-top:4px;line-height:1.5">
+          Si un conductor quiere ir comprando la moto, ponle el precio en su ficha y registra los abonos
+          como "Abono a la compra". Se cuentan aparte del arriendo.</div>
+      </div>`}
+    <div class="byny-tfoot"><span>${filas.length} plan${filas.length===1?'':'es'} de compra</span></div>`;
+  const totalP=filas.reduce((s,f)=>s+f.precio,0), totalA=filas.reduce((s,f)=>s+f.abonado,0);
+  document.getElementById('mot-rail').innerHTML=`
+    <div class="byny-card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Avance total</div>
+      ${totalP?`<div class="md-bar" style="height:10px;background:#DFD2F7"><span style="width:${(totalA/totalP*100).toFixed(0)}%;background:#6B45C7"></span></div>
+        <div style="margin-top:10px">
+          <div class="md-row"><span class="md-row-l">Precio total</span><span class="md-row-v">${money(totalP)}</span></div>
+          <div class="md-row"><span class="md-row-l">Abonado</span><span class="md-row-v" style="color:#6B45C7">${money(totalA)}</span></div>
+          <div class="md-row" style="border-bottom:none"><span class="md-row-l">Falta</span><span class="md-row-v">${money(totalP-totalA)}</span></div>
+        </div>`
+      :'<div style="font-size:12px;color:var(--ink2)">Sin planes de compra.</div>'}
+    </div>`;
 }
 
 function renderMoney(m){
