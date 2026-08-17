@@ -113,17 +113,25 @@ the field nor the record — a single stray value fails the whole save. `saveBik
 `photos: undefined` when a moto had no photos, so **every moto created without photos
 failed to save**.
 
-Records are also size-checked before the write. A Firestore document is capped at 1 MB,
-and `saveBike`/`saveEditBike` still put moto and document photos into the record as
-base64, so this is reachable. The check reports which record is oversized instead of
-letting Firestore return `invalid-argument`. Moving those photos to Storage, as payment
-and expense receipts already are, is the real fix and is still outstanding.
+Records are also size-checked before the write, reporting which record is oversized
+rather than letting Firestore return a bare `invalid-argument`. As of v4.4 nothing should
+trigger it: every image — payment and expense receipts, moto photos, SOAT and
+técnico-mecánica photos, driver documents — goes to Firebase Storage and only the URL is
+kept in the record. Base64 is written into a record only when Storage is unavailable.
+
+**Never put an image in a document.** Four moto photos alone exceed the 1 MB cap, and the
+failure mode is that the moto silently stops saving.
+
+## Document ids
+
+Records use opaque ids (`b1`, `b1786928901727`), not plates. Six collections reference a
+moto by id — payments, expenses, graceDays, contracts, appointments, renterHistory — so an
+id must never change. Plates do change: a typo correction or a re-registration would
+otherwise mean deleting and recreating the document and rewriting every reference, and any
+missed one silently detaches money from the moto. The plate lives in `name`.
 
 ## Known issues (still open)
 
-- **Moto and document photos are still stored as base64 inside the bike record.** Payment
-  and expense receipts go to Storage; these do not. Four photos will exceed the 1 MB
-  document limit.
 - **Drivers are matched to bikes by first-name substring** (`b.renter.includes(fname)`).
   Two drivers sharing a first name, or a name contained in another, resolve to the wrong bike.
 - The repository is public. Nothing sensitive is in it any more (the Bancolombia account
