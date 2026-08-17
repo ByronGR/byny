@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v5.4 -->
+<!-- Byny Rental v5.5 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -739,7 +739,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="byny-head-inner">
     <div class="byny-brand">
       <span class="byny-word">Byny</span>
-      <span class="byny-city">Medellín</span><span class="byny-ver">v5.4</span>
+      <span class="byny-city">Medellín</span><span class="byny-ver">v5.5</span>
     </div>
     <nav class="byny-tabs">
       <button class="byny-tab on" data-tab="dash" onclick="goTab('dash')">Inicio</button>
@@ -1928,7 +1928,7 @@ function save(){
       });
       desencolar(cambios);
       log('Guardado OK ('+cambios.length+')');
-      setStatus('connected','● Guardado en Firebase');
+      setStatus('connected','Guardado en Firebase');
     })
     .catch(e=>{
       // Un guardado fallido NUNCA puede pasar desapercibido: es dinero.
@@ -1991,7 +1991,7 @@ function vaciarCola(){
       else SERVIDOR[c.col].delete(String(c.id));
     });
     desencolar(cambios);
-    setStatus('connected','● Guardado en Firebase');
+    setStatus('connected','Guardado en Firebase');
   }).catch(e=>log('Reintento falló: '+e.code));
 }
 
@@ -2022,7 +2022,7 @@ function escribirLote(cambios){
 function guardarLegado(){
   setStatus('connecting','Guardando (modo antiguo)...');
   fbDB.collection(DOC_LEGADO.col).doc(DOC_LEGADO.doc).set(cloneForStorage(DB))
-    .then(()=>{setStatus('connected','● Guardado (modo antiguo)');try{localStorage.removeItem(PENDING_KEY);}catch(e){}})
+    .then(()=>{setStatus('connected','Guardado (modo antiguo)');try{localStorage.removeItem(PENDING_KEY);}catch(e){}})
     .catch(e=>{
       setStatus('error','NO se guardó: '+(e.code||''));
       alert('⚠ No se pudo guardar en Firebase.\n\nMotivo: '+(e.code||e.message));
@@ -2125,7 +2125,7 @@ function suscribirColeccion(col){
       writeStored(LOCAL_KEY,DB);
       render();
       if(colsListas.size===COLECCIONES.length){
-        setStatus('connected','● Sincronizado');
+        setStatus('connected','Sincronizado');
         vaciarCola();
         revisarMigracion();
       }
@@ -2220,7 +2220,7 @@ function revisarMigracion(){
       .then(()=>{
         // El documento antiguo NO se borra: es el respaldo de la migración.
         log('Migración completa: '+cambios.length+' documento(s) creados. byny/data se conserva intacto.');
-        setStatus('connected','● Sincronizado');
+        setStatus('connected','Sincronizado');
         return fbDB.collection('config').doc('migracion').set({
           hecha:true,fecha:new Date().toISOString(),registros:cambios.length,
           origen:'byny/data',clientId:CLIENT_ID||getClientId()
@@ -2246,6 +2246,13 @@ function setStatus(type, text){
   // Top right header status
   const s1=document.getElementById('fb-status');
   if(s1){s1.textContent=text;s1.style.color=type==='connected'?'var(--leaf)':type==='error'?'var(--fire)':'var(--ink3)';}
+  // El punto que late es el único indicador visual: toma el color del estado y
+  // deja de latir cuando algo va mal, para que un error no parezca actividad normal.
+  const dot=document.getElementById('sync-dot');
+  if(dot){
+    dot.style.background=type==='connected'?'var(--leaf)':type==='error'?'var(--fire)':'var(--sun)';
+    dot.style.animation=type==='connected'?'bynyPulse 2.4s infinite':'none';
+  }
   // Ajustes page status box
   const s2=document.getElementById('fb-status-2');
   if(s2){
