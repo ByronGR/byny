@@ -87,8 +87,13 @@ still possible but takes two deliberate confirmations, and either way a full cop
 prior state is written to a `byny_rescate_import_*` key in localStorage first.
 
 The old behaviour was a silent full replace, which cost two hand-entered bikes on
-2026-08-16: importing a one-bike file deleted everything else. Merging is by `id`; an
-incoming record whose id already exists is given a new one rather than dropped.
+2026-08-16: importing a one-bike file deleted everything else.
+
+Matching is by `id`, and when the file's records already exist the prompt offers to
+**fill them in** rather than duplicate them. This is the intended workflow: Byron creates
+a moto in the app with the basics, sends the details, and loads a prepared file that
+completes the same record. Filling in only overwrites fields the file supplies with a
+non-empty value, so anything typed by hand survives.
 
 ## Files and receipts
 

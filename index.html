@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v4.0 -->
+<!-- Byny Rental v4.1 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -602,7 +602,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="brand">
     <span class="brand-name">Byny Rental</span>
     <span class="brand-sub">Medellín</span>
-    <span class="brand-ver">v4.0</span>
+    <span class="brand-ver">v4.1</span>
   </div>
   <div class="topbar-right">
     <span class="date-chip" id="hdr-date"></span>
@@ -2098,6 +2098,15 @@ function showSaved(msg='Cambios guardados'){
 // ═══════════════════════════════════════
 function fmt(n){return new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);}
 function fmtK(n){return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?'$'+(n/1000).toFixed(0)+'k':'$'+n;}
+// El teléfono se guarda en la moto y también en el conductor. Si la moto no lo
+// tiene, se usa el del conductor asignado: así sólo hay que escribirlo una vez.
+function telDeMoto(bike){
+  if(!bike)return '';
+  if(bike.phone)return String(bike.phone).replace(/\D/g,'');
+  const d=(DB.drivers||[]).find(x=>x.id===bike.driverId);
+  return d&&d.phone?String(d.phone).replace(/\D/g,''):'';
+}
+
 function pypDayName(plateDigit){
   if(plateDigit===null||plateDigit===''||plateDigit===undefined)return '';
   // Mismo origen que el cobro (pypMap) — lo que se muestra es lo que se factura.
@@ -3594,16 +3603,34 @@ function importData(e){
 
     const hayAhora=cuenta(DB);
     const detalle='El archivo trae: '+traeAlgo.map(resumen).join(', ')+'.\n\n';
-    let reemplazar=false;
+
+    // Cuántos registros del archivo coinciden por id con algo que ya existe.
+    const coinciden=LISTAS_IMPORT.reduce((n,k)=>{
+      const ids=new Set((DB[k]||[]).map(x=>x&&x.id).filter(Boolean));
+      return n+(entra[k]||[]).filter(x=>x&&ids.has(x.id)).length;
+    },0);
+
+    let modo='agregar';   // 'agregar' | 'completar' | 'reemplazar'
     if(hayAhora){
-      reemplazar=!confirm(detalle+
-        'Ya tienes '+hayAhora+' registros guardados.\n\n'+
-        'Aceptar = AGREGAR el archivo a lo que ya tienes (recomendado).\n'+
-        'Cancelar = REEMPLAZAR todo por el archivo (se pierde lo actual).');
-      if(reemplazar&&!confirm('¿Seguro? Se borrarán los '+hayAhora+' registros actuales y quedará sólo lo del archivo.')){
-        e.target.value='';return;
+      if(coinciden){
+        // Caso típico: Byron creó la moto en la app y el archivo trae sus datos.
+        modo=confirm(detalle+
+          coinciden+' de esos registros YA EXISTEN aquí (mismo id).\n\n'+
+          'Aceptar = COMPLETAR esos registros con los datos del archivo\n'+
+          '                 y agregar los que sean nuevos (recomendado).\n'+
+          'Cancelar = dejar los actuales intactos y agregar el archivo aparte\n'+
+          '                 (quedarán duplicados).')?'completar':'agregar';
+      }else{
+        modo=confirm(detalle+
+          'Ya tienes '+hayAhora+' registros guardados.\n\n'+
+          'Aceptar = AGREGAR el archivo a lo que ya tienes (recomendado).\n'+
+          'Cancelar = REEMPLAZAR todo por el archivo (se pierde lo actual).')?'agregar':'reemplazar';
+        if(modo==='reemplazar'&&!confirm('¿Seguro? Se borrarán los '+hayAhora+' registros actuales y quedará sólo lo del archivo.')){
+          e.target.value='';return;
+        }
       }
     }
+    const reemplazar=modo==='reemplazar';
 
     // Copia de seguridad antes de tocar nada: siempre reversible.
     try{localStorage.setItem('byny_rescate_import_'+Date.now(),JSON.stringify(cloneForStorage(DB)));}catch(err){}
@@ -3619,7 +3646,23 @@ function importData(e){
         (entra[k]||[]).forEach(item=>{
           if(!item)return;
           const copia={...item};
-          if(copia.id&&ids.has(copia.id))copia.id=k.charAt(0)+Date.now()+Math.random().toString(36).slice(2,6);
+          if(copia.id&&ids.has(copia.id)){
+            if(modo==='completar'){
+              // Rellena el registro existente sin borrar lo que ya tuviera:
+              // sólo se sobrescriben los campos que el archivo trae con valor.
+              const i=actuales.findIndex(x=>x&&x.id===copia.id);
+              const previo=actuales[i];
+              const fusion={...previo};
+              Object.keys(copia).forEach(campo=>{
+                const v=copia[campo];
+                const vacio=v===''||v===null||v===undefined||(Array.isArray(v)&&!v.length);
+                if(!vacio)fusion[campo]=v;
+              });
+              actuales[i]=fusion;
+              return;
+            }
+            copia.id=k.charAt(0)+Date.now()+Math.random().toString(36).slice(2,6);
+          }
           if(copia.id)ids.add(copia.id);
           actuales.push(copia);
         });
@@ -3628,8 +3671,9 @@ function importData(e){
       DB.settings={...(entra.settings||{}),...(DB.settings||{})};
     }
     save();render();
-    alert(reemplazar?'Reemplazado. Ahora hay '+cuenta(DB)+' registros.'
-                    :'Agregado. Ahora hay '+cuenta(DB)+' registros (antes '+hayAhora+').');
+    alert(modo==='reemplazar'?'Reemplazado. Ahora hay '+cuenta(DB)+' registros.'
+         :modo==='completar' ?'Listo. Se completaron '+coinciden+' registro(s) y ahora hay '+cuenta(DB)+' en total.'
+                             :'Agregado. Ahora hay '+cuenta(DB)+' registros (antes '+hayAhora+').');
     e.target.value='';
   };
   r.readAsText(f);
@@ -3680,7 +3724,7 @@ function renderLateAlerts(){
   el.innerHTML=late.map(b=>{
     const bal=calcBikeBalance(b);
     const days2=getBikeOwedDays(b);
-    const phone=(b.phone||'').replace(/\D/g,'');
+    const phone=telDeMoto(b);
     const msg=encodeURIComponent(`Hola ${b.renter}, tienes pendiente ${fmt(bal)} (${days2} día${days2!==1?'s':''}) de arriendo. Por favor ponerse al día 🙏 — Byny Rental`);
     return `<div class="alert fire" style="margin-bottom:.5rem">
       <span><strong>${b.renter}</strong> debe ${fmt(bal)} · ${days2} día${days2!==1?'s':''} — ${b.name}</span>
@@ -3862,7 +3906,7 @@ function renderDocAlerts(){
     const bal=calcBikeBalance(b);
     const rate=getBikeCurrentRate(b);
     const days=rate>0?Math.ceil(bal/rate):0;
-    const phone=(b.phone||'').replace(/\D/g,'');
+    const phone=telDeMoto(b);
     const msg=encodeURIComponent(`Hola ${b.renter}, tienes pendiente ${fmt(bal)} (${days} día${days!==1?'s':''}) de arriendo. Por favor ponerse al día 🙏 — Byny Rental`);
     const waLink=phone?`https://wa.me/${phone}?text=${msg}`:'';
     const alertId='late_'+b.id+'_'+Math.ceil(bal/1000);
@@ -4244,7 +4288,7 @@ function renderBikeRow(b,now){
   const owedDays=getBikeOwedDays(b);
   const pp=getPurchaseProgress(b.id);
   const pypToday=b.plateDigit!==''&&b.plateDigit!==null&&b.plateDigit!==undefined&&isPYP(tod(),b.plateDigit);
-  const phone=(b.phone||'').replace(/[^0-9]/g,'');
+  const phone=telDeMoto(b);
   const waMsg=encodeURIComponent('Hola '+b.renter+', tienes pendiente '+(owed>0?fmt(owed)+' ('+owedDays+' días) ':'')+' de arriendo. Byny Rental');
 
   // Doc expiry
@@ -4442,9 +4486,9 @@ function renderBikeRow(b,now){
               <span class="il">Pico y Placa</span>
               <span class="iv">${pypDayName(b.plateDigit).replace('P&P: ','')}</span>
             </div>`:''}
-            ${b.phone?`<div class="ins-item">
+            ${telDeMoto(b)?`<div class="ins-item">
               <span class="il">Conductor</span>
-              <a href="https://wa.me/${(b.phone||'').replace(/\D/g,'')}" target="_blank" style="font-size:12px;font-weight:700;color:var(--sky);text-decoration:none">WA ↗</a>
+              <a href="https://wa.me/${telDeMoto(b)}" target="_blank" style="font-size:12px;font-weight:700;color:var(--sky);text-decoration:none">WA ↗</a>
             </div>`:''}
           </div>
         </div>
@@ -4926,7 +4970,7 @@ function renderContratos(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.875rem">
         <div>
           <div style="font-size:16px;font-weight:700;color:var(--ink)">${b.name}</div>
-          <div style="font-size:12px;color:var(--ink3);margin-top:2px">${b.renter}${b.phone?` · <a href="https://wa.me/${(b.phone||'').replace(/\D/g,'')}" style="color:var(--sky);font-weight:700" target="_blank">WhatsApp</a>`:''}</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:2px">${b.renter}${telDeMoto(b)?` · <a href="https://wa.me/${telDeMoto(b)}" style="color:var(--sky);font-weight:700" target="_blank">WhatsApp</a>`:''}</div>
         </div>
         <span class="badge ${typeBadge}">${typeLabels[type]}</span>
       </div>
