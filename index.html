@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v3.1 -->
+<!-- Byny Rental v4.0 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -602,7 +602,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="brand">
     <span class="brand-name">Byny Rental</span>
     <span class="brand-sub">Medellín</span>
-    <span class="brand-ver">v3.1</span>
+    <span class="brand-ver">v4.0</span>
   </div>
   <div class="topbar-right">
     <span class="date-chip" id="hdr-date"></span>
@@ -1687,54 +1687,175 @@ function load(){
   // Load local data first — prefer pending Firebase saves so reloads do not lose recent work.
   try{
     const local=readStored(LOCAL_KEY);
-    const pending=readStored(PENDING_KEY);
-    const source=pending&&getUpdatedAt(pending)>=getUpdatedAt(local)?pending:local;
-    if(source)DB=normalizeDB(source);
+    if(local)DB=normalizeDB(local);
+    const cola=readStored(PENDING_KEY);
+    PENDIENTES=Array.isArray(cola)?cola:[];
+    if(PENDIENTES.length)log('Hay '+PENDIENTES.length+' cambio(s) sin sincronizar de la sesión anterior');
   }catch(e){}
   // Connect Firebase in background — UI already rendered from local data
   initFirebase(FIREBASE_CFG);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CAPA DE DATOS — un documento por registro
+// ═══════════════════════════════════════════════════════════════
+// Antes todo el negocio vivía en un único documento (byny/data): cada guardado
+// reescribía el archivo entero, así que dos personas guardando a la vez se
+// pisaban. Ahora cada moto, pago, gasto, etc. es su propio documento y sólo se
+// escribe lo que cambió.
+const COLECCIONES=['bikes','drivers','payments','expenses','retiros',
+                   'graceDays','contracts','appointments','renterHistory'];
+const DOC_LEGADO={col:'byny',doc:'data'};
+
+// Última versión conocida del servidor: {coleccion: Map(id -> json)}.
+// El diff se hace contra esto, por eso no hay que tocar los ~100 sitios que
+// modifican DB y llaman a save().
+let SERVIDOR={};
+COLECCIONES.forEach(c=>SERVIDOR[c]=new Map());
+let SERVIDOR_SETTINGS=null;
+// Cambios que el servidor todavía no ha confirmado (sin conexión, sin permisos,
+// o escritos antes de la primera respuesta). Se reaplican encima de cada
+// snapshot para que nunca se pierda algo que una persona ya escribió.
+let PENDIENTES=[];
+let modoLegado=false;          // true si las reglas nuevas aún no están publicadas
+let colsListas=new Set();      // colecciones que ya respondieron al menos una vez
+let migracionHecha=false;
+
+function firmar(o){try{return JSON.stringify(o);}catch(e){return String(o);}}
+
+// Qué cambió respecto a lo que hay en el servidor.
+function calcularCambios(){
+  const cambios=[];
+  COLECCIONES.forEach(col=>{
+    const actuales=new Map();
+    (DB[col]||[]).forEach(item=>{if(item&&item.id)actuales.set(String(item.id),item);});
+    const previos=SERVIDOR[col]||new Map();
+    actuales.forEach((item,id)=>{
+      if(previos.get(id)!==firmar(item))cambios.push({tipo:'set',col,id,item});
+    });
+    previos.forEach((_,id)=>{
+      if(!actuales.has(id))cambios.push({tipo:'del',col,id});
+    });
+  });
+  const s=firmar(DB.settings||{});
+  if(s!==SERVIDOR_SETTINGS)cambios.push({tipo:'set',col:'config',id:'settings',item:DB.settings||{}});
+  return cambios;
+}
+
 function save(){
-  if(DB.fbConfig){
-    try{localStorage.setItem('byny_fbconfig',JSON.stringify(DB.fbConfig));}catch(e){}
-  }
-  // fromSyncedSession marca si este cambio se hizo SOBRE los datos del servidor.
-  // Sólo esos cambios pueden reintentar subirse; los de un dispositivo que
-  // nunca sincronizó se quedan en local y jamás pisan el servidor.
-  // userEdited: lo escribió una persona en esta sesión → NUNCA se descarta.
-  // fromSyncedSession: se escribió encima de datos ya leídos del servidor.
-  DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId(),fromSyncedSession:hasSyncedOnce,userEdited:bootComplete};
+  DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId(),
+            fromSyncedSession:hasSyncedOnce,userEdited:bootComplete};
   writeStored(LOCAL_KEY,DB);
   writeStored(PENDING_KEY,DB);
-  // Render immediately so UI updates without waiting for Firebase round trip
-  render();
-  if(fbDB&&hasSyncedOnce){
-    const toSync=cloneForStorage(DB);
-    log('Saving to Firebase... expenses='+toSync.expenses.length);
-    setStatus('connecting','Guardando...');
-    fbDB.collection('byny').doc('data').set(toSync)
-      .then(()=>{
-        log('Save OK');
-        setStatus('connected','● Guardado en Firebase');
-        try{localStorage.removeItem(PENDING_KEY);}catch(e){}
-      })
-      .catch(e=>{
-        // Un guardado fallido NUNCA puede pasar desapercibido: es dinero.
-        log('Save ERROR: '+e.code+' — '+e.message);
-        setStatus('error','NO se guardó en Firebase: '+e.code);
-        alert('⚠ No se pudo guardar en Firebase.\n\n'+
-              'Motivo: '+(e.code||e.message)+'\n\n'+
-              'El cambio quedó guardado en este dispositivo y se reintentará solo.\n'+
-              'NO cierres la app hasta que el indicador vuelva a decir "Sincronizado".');
-      });
-  }else if(fbDB&&!hasSyncedOnce){
-    log('Save held back — aún no hemos leído el servidor. Se guardó solo en este dispositivo.');
+  render();   // la pantalla no espera al servidor
+
+  if(modoLegado&&fbDB&&hasSyncedOnce){guardarLegado();return;}
+
+  const cambios=calcularCambios();
+  if(!cambios.length){log('Nada que guardar');return;}
+
+  if(!fbDB||!hasSyncedOnce){
+    // Se encola, no se descarta.
+    encolar(cambios);
+    log('Guardado en cola ('+PENDIENTES.length+') — todavía sin servidor');
     setStatus('connecting','Guardado local — esperando servidor');
-  }else{
-    log('save() called but fbDB is null — no Firebase sync');
-    setStatus('error','Sin conexión — guardado solo en este dispositivo');
+    return;
   }
+  log('Guardando '+cambios.length+' registro(s) cambiado(s)');
+  setStatus('connecting','Guardando...');
+  escribirLote(cambios)
+    .then(()=>{
+      // Sólo se da por sincronizado lo que el servidor aceptó.
+      cambios.forEach(c=>{
+        if(c.col==='config'){SERVIDOR_SETTINGS=firmar(c.item);return;}
+        if(c.tipo==='set')SERVIDOR[c.col].set(c.id,firmar(c.item));
+        else SERVIDOR[c.col].delete(c.id);
+      });
+      desencolar(cambios);
+      log('Guardado OK ('+cambios.length+')');
+      setStatus('connected','● Guardado en Firebase');
+    })
+    .catch(e=>{
+      // Un guardado fallido NUNCA puede pasar desapercibido: es dinero.
+      encolar(cambios);
+      log('ERROR al guardar: '+e.code+' — '+e.message);
+      setStatus('error','NO se guardó en Firebase: '+(e.code||''));
+      alert('⚠ No se pudo guardar en Firebase.\n\n'+
+            'Motivo: '+(e.code||e.message)+'\n\n'+
+            'El cambio quedó guardado en este dispositivo.\n'+
+            'NO cierres la app hasta que el indicador diga "Guardado en Firebase".');
+    });
+}
+
+function claveCambio(c){return c.col+'/'+c.id;}
+
+function encolar(cambios){
+  const porClave=new Map(PENDIENTES.map(c=>[claveCambio(c),c]));
+  cambios.forEach(c=>porClave.set(claveCambio(c),c));
+  PENDIENTES=[...porClave.values()];
+  try{localStorage.setItem(PENDING_KEY,JSON.stringify(PENDIENTES));}catch(e){}
+}
+
+function desencolar(cambios){
+  const fuera=new Set(cambios.map(claveCambio));
+  PENDIENTES=PENDIENTES.filter(c=>!fuera.has(claveCambio(c)));
+  try{
+    if(PENDIENTES.length)localStorage.setItem(PENDING_KEY,JSON.stringify(PENDIENTES));
+    else localStorage.removeItem(PENDING_KEY);
+  }catch(e){}
+}
+
+// Reaplica sobre DB lo que el servidor aún no ha confirmado.
+function aplicarPendientes(col){
+  PENDIENTES.filter(c=>c.col===col).forEach(c=>{
+    const lista=DB[col]||(DB[col]=[]);
+    const i=lista.findIndex(x=>x&&String(x.id)===String(c.id));
+    if(c.tipo==='del'){if(i>=0)lista.splice(i,1);}
+    else if(i>=0)lista[i]=c.item;
+    else lista.push(c.item);
+  });
+}
+
+// Reintenta lo pendiente en cuanto hay servidor.
+function vaciarCola(){
+  if(!fbDB||!hasSyncedOnce||modoLegado||!PENDIENTES.length)return;
+  const cambios=[...PENDIENTES];
+  log('Reintentando '+cambios.length+' cambio(s) pendiente(s)');
+  escribirLote(cambios).then(()=>{
+    cambios.forEach(c=>{
+      if(c.col==='config'){SERVIDOR_SETTINGS=firmar(c.item);return;}
+      if(c.tipo==='set')SERVIDOR[c.col].set(String(c.id),firmar(c.item));
+      else SERVIDOR[c.col].delete(String(c.id));
+    });
+    desencolar(cambios);
+    setStatus('connected','● Guardado en Firebase');
+  }).catch(e=>log('Reintento falló: '+e.code));
+}
+
+// Firestore admite 500 operaciones por lote.
+function escribirLote(cambios){
+  const trozos=[];
+  for(let i=0;i<cambios.length;i+=450)trozos.push(cambios.slice(i,i+450));
+  return trozos.reduce((prev,trozo)=>prev.then(()=>{
+    const lote=fbDB.batch();
+    trozo.forEach(c=>{
+      const ref=fbDB.collection(c.col).doc(String(c.id));
+      if(c.tipo==='set')lote.set(ref,c.item);else lote.delete(ref);
+    });
+    return lote.commit();
+  }),Promise.resolve());
+}
+
+// Respaldo: si las reglas nuevas aún no están publicadas seguimos usando el
+// documento antiguo, para que un despliegue no deje la app inservible.
+function guardarLegado(){
+  setStatus('connecting','Guardando (modo antiguo)...');
+  fbDB.collection(DOC_LEGADO.col).doc(DOC_LEGADO.doc).set(cloneForStorage(DB))
+    .then(()=>{setStatus('connected','● Guardado (modo antiguo)');try{localStorage.removeItem(PENDING_KEY);}catch(e){}})
+    .catch(e=>{
+      setStatus('error','NO se guardó: '+(e.code||''));
+      alert('⚠ No se pudo guardar en Firebase.\n\nMotivo: '+(e.code||e.message));
+    });
 }
 
 // ── Firebase init ──
@@ -1801,152 +1922,146 @@ async function initFirebase(cfg){
 
 function subscribeFirestore(){
   if(!fbDB)return;
-  if(fbUnsub){fbUnsub();fbUnsub=null;}
-  fbUnsub=fbDB.collection('byny').doc('data').onSnapshot(
+  cancelarSuscripciones();
+  colsListas=new Set();
+  log('Suscribiendo a las colecciones...');
+  COLECCIONES.forEach(col=>suscribirColeccion(col));
+  suscribirSettings();
+}
+
+let unsubs=[];
+function cancelarSuscripciones(){
+  unsubs.forEach(u=>{try{u();}catch(e){}});
+  unsubs=[];
+  if(fbUnsub){try{fbUnsub();}catch(e){}fbUnsub=null;}
+}
+
+function suscribirColeccion(col){
+  const u=fbDB.collection(col).onSnapshot(
     snap=>{
-      log('Snapshot received. exists='+snap.exists);
-      const savedCfg=DB.fbConfig;
-      // Ya sabemos qué hay en el servidor: a partir de aquí este dispositivo
-      // sí puede subir cambios.
-      const firstSnapshot=!hasSyncedOnce;
+      const docs=[];
+      const firma=new Map();
+      snap.forEach(d=>{
+        const item={...d.data(),id:d.id};
+        docs.push(item);
+        firma.set(d.id,firmar(item));
+      });
+      SERVIDOR[col]=firma;
+      DB[col]=docs;
+      aplicarPendientes(col);   // lo escrito a mano y aún sin confirmar manda
+      colsListas.add(col);
       hasSyncedOnce=true;
-      if(snap&&snap.exists){
-        const remote=snap.data();
-        const pending=readStored(PENDING_KEY);
-        const remoteUpdated=getUpdatedAt(remote);
-        const pendingUpdated=getUpdatedAt(pending);
-        // Un "pending" sólo puede pisar el servidor si se escribió ENCIMA de
-        // datos del servidor (fromSyncedSession). Un pending nacido en un
-        // dispositivo que nunca sincronizó se descarta: era la causa de que
-        // un teléfono nuevo borrara la información real de todos.
-        // Lo que escribió una persona (userEdited) SIEMPRE se respeta, aunque se
-        // haya escrito en el segundo previo a la primera respuesta del servidor.
-        // Sólo se descarta lo que este dispositivo tenía en caché sin haber
-        // leído nunca el servidor: eso era la demo resucitándose.
-        const pendingConfiable=pending&&pending._meta&&(pending._meta.fromSyncedSession||pending._meta.userEdited);
-        if(pending&&pendingUpdated>remoteUpdated&&!pendingConfiable){
-          log('Pending local descartado — caché sin sincronizar, nadie lo escribió a mano. Se conserva lo del servidor.');
-          try{localStorage.removeItem(PENDING_KEY);}catch(e){}
-        }else if(pending&&pendingUpdated>remoteUpdated){
-          log('Remote snapshot older than pending local save — keeping local and retrying upload');
-          DB=normalizeDB(pending);
-          writeStored(LOCAL_KEY,DB);
-          render();
-          const retrySync=cloneForStorage(DB);
-          fbDB.collection('byny').doc('data').set(retrySync)
-            .then(()=>log('Pending retry upload OK'))
-            .catch(e=>{
-              log('Pending retry upload ERROR: '+e.code+' — '+e.message);
-              setStatus('error','Pendiente de sincronizar');
-            });
-          return;
-        }
-        if(pending&&remoteUpdated>=pendingUpdated){
-          try{localStorage.removeItem(PENDING_KEY);}catch(e){}
-        }
-        // RED DE SEGURIDAD: si lo que llega del servidor tiene MENOS registros
-        // que lo que hay en este dispositivo, antes se sobrescribía en silencio.
-        // Ahora guardamos una copia intacta y avisamos, para no perder nada nunca más.
-        if(firstSnapshot){
-          const localCount=(DB.bikes||[]).length+(DB.payments||[]).length+(DB.expenses||[]).length;
-          const remoteCount=(remote.bikes||[]).length+(remote.payments||[]).length+(remote.expenses||[]).length;
-          if(localCount>remoteCount){
-            const key='byny_rescate_'+Date.now();
-            try{
-              localStorage.setItem(key,JSON.stringify(cloneForStorage(DB)));
-              log('AVISO: el servidor traía menos datos que este dispositivo. Copia de rescate guardada en '+key);
-              setTimeout(()=>alert('Atención: los datos del servidor tienen menos registros que los de este dispositivo.\n\nNo se borró nada: se guardó una copia de seguridad en este teléfono.\nAvísale a Byron antes de seguir usando la app.'),300);
-            }catch(e){log('No se pudo guardar copia de rescate: '+e.message);}
-          }
-        }
-        // Remote is the source of truth — always use it as the base.
-        // Only add local-only items as a safety net for items written
-        // in the last minute that haven't synced yet (same-device lag).
-        // On a fresh device, DB.bikes is [] so localOnlyBikes is [] — no interference.
-        const mergeArray=(remoteArr,localArr,key='id')=>{
-          const base=[...(remoteArr||[])];
-          // Only keep local items missing from remote if they were created very recently.
-          const cutoff=Date.now()-60000;
-          (localArr||[]).forEach(localItem=>{
-            const id=localItem[key]||'';
-            const ts=parseInt(id.replace(/\D/g,''))||0;
-            if(!base.some(r=>r[key]===localItem[key])&&ts>cutoff){
-              base.push(localItem);
-            }
-          });
-          return base;
-        };
-
-        // For bikes also preserve driverId/renter and newly added bikes while Firebase catches up.
-        const remoteBikes=(remote.bikes||[]).map(rb=>{
-          const local=(DB.bikes||[]).find(b=>b.id===rb.id);
-          return{...rb,driverId:rb.driverId||local?.driverId||null,renter:rb.renter||local?.renter||''};
-        });
-        const cutoff=Date.now()-300000;
-        const localOnlyBikes=(DB.bikes||[]).filter(lb=>{
-          const ts=parseInt((lb.id||'').replace(/\D/g,''))||0;
-          return ts>cutoff&&!(remote.bikes||[]).some(rb=>rb.id===lb.id);
-        });
-
-        DB={
-          bikes:[],payments:[],expenses:[],graceDays:[],
-          retiros:[],renterHistory:[],contracts:[],drivers:[],pendingApprovals:[],appointments:[],
-          settings:{rate:DR,name:'Byny Rental'},
-          ...remote,
-          bikes:[...remoteBikes,...localOnlyBikes],
-          payments:mergeArray(remote.payments,DB.payments),
-          expenses:mergeArray(remote.expenses,DB.expenses),
-          graceDays:mergeArray(remote.graceDays,DB.graceDays),
-          retiros:mergeArray(remote.retiros,DB.retiros),
-          drivers:mergeArray(remote.drivers,DB.drivers),
-          pendingApprovals:mergeArray(remote.pendingApprovals,DB.pendingApprovals),
-          appointments:mergeArray(remote.appointments,DB.appointments),
-          renterHistory:remote.renterHistory||DB.renterHistory||[],
-          contracts:remote.contracts||DB.contracts||[],
-          _meta:remote._meta||DB._meta||{},
-          fbConfig:savedCfg,
-        };
-        writeStored(LOCAL_KEY,DB);
-        render();
-      }else if(DB.bikes&&DB.bikes.length>0){
-        // El documento del servidor no existe (o fue borrado a propósito desde la
-        // consola de Firebase) pero este dispositivo tiene datos guardados.
-        // ANTES se subían solos, así que borrar en la consola no servía de nada:
-        // el primer navegador abierto los resucitaba. Ahora se pregunta.
-        log('No remote data — local bikes='+DB.bikes.length);
-        // Si lo escribió una persona en esta sesión, se sube sin preguntar:
-        // es trabajo nuevo, no caché vieja.
-        const esTrabajoNuevo=DB._meta&&DB._meta.userEdited;
-        setStatus(esTrabajoNuevo?'connecting':'error',esTrabajoNuevo?'Subiendo al servidor...':'El servidor está vacío');
-        const subir=esTrabajoNuevo?true:confirm(
-          'El servidor no tiene datos, pero este dispositivo todavía guarda '+DB.bikes.length+' moto(s).\n\n'+
-          'Aceptar = subir los datos de este dispositivo al servidor.\n'+
-          'Cancelar = borrarlos también de este dispositivo (empezar de cero).'
-        );
-        if(subir){
-          DB._meta={...(DB._meta||{}),updatedAt:Date.now(),clientId:CLIENT_ID||getClientId(),fromSyncedSession:true};
-          writeStored(LOCAL_KEY,DB);
-          writeStored(PENDING_KEY,DB);
-          const ts=cloneForStorage(DB);
-          fbDB.collection('byny').doc('data').set(ts)
-            .then(()=>log('Upload done'))
-            .catch(e=>log('Upload error: '+e.message));
-        }else{
-          log('El usuario eligió empezar de cero — limpiando este dispositivo');
-          try{localStorage.removeItem(LOCAL_KEY);localStorage.removeItem(PENDING_KEY);}catch(e){}
-          DB=normalizeDB({});
-          render();
-        }
-      }else{
-        log('No remote data and no local data — waiting');
+      writeStored(LOCAL_KEY,DB);
+      render();
+      if(colsListas.size===COLECCIONES.length){
+        setStatus('connected','● Sincronizado');
+        vaciarCola();
+        revisarMigracion();
       }
-      setStatus('connected','● Sincronizado');
     },
     err=>{
-      log('Listener error: '+err.code);
-      setStatus('error','Error: '+err.code);
-    }
-  );
+      log('Error escuchando '+col+': '+err.code);
+      if(err.code==='permission-denied'&&!modoLegado)activarModoLegado();
+      else setStatus('error','Error de conexión: '+err.code);
+    });
+  unsubs.push(u);
+}
+
+function suscribirSettings(){
+  const u=fbDB.collection('config').doc('settings').onSnapshot(
+    snap=>{
+      if(snap.exists){
+        DB.settings={...(DB.settings||{}),...snap.data()};
+        SERVIDOR_SETTINGS=firmar(DB.settings);
+        renderSettings();
+      }
+    },
+    err=>{if(err.code==='permission-denied'&&!modoLegado)activarModoLegado();});
+  unsubs.push(u);
+}
+
+// Si las reglas nuevas todavía no están publicadas, Firestore rechaza las
+// colecciones. En vez de dejar la app inservible se vuelve al documento antiguo
+// y se avisa en pantalla qué hay que hacer.
+function activarModoLegado(){
+  modoLegado=true;
+  cancelarSuscripciones();
+  log('Sin permiso sobre las colecciones — volviendo al documento antiguo byny/data');
+  setStatus('error','Faltan las reglas nuevas de Firebase');
+  mostrarAvisoReglas();
+  fbUnsub=fbDB.collection(DOC_LEGADO.col).doc(DOC_LEGADO.doc).onSnapshot(
+    snap=>{
+      hasSyncedOnce=true;
+      if(snap.exists){
+        const r=snap.data();
+        COLECCIONES.forEach(c=>{DB[c]=r[c]||[];});
+        DB.settings={...(DB.settings||{}),...(r.settings||{})};
+        DB._meta=r._meta||DB._meta;
+        writeStored(LOCAL_KEY,DB);
+      }
+      render();
+    },
+    err=>{setStatus('error','Error de conexión: '+err.code);});
+}
+
+function mostrarAvisoReglas(){
+  const el=document.getElementById('dash-alerts');
+  if(el&&!document.getElementById('aviso-reglas')){
+    el.insertAdjacentHTML('afterbegin',
+      `<div id="aviso-reglas" class="alert fire" style="margin-bottom:.5rem">
+        <span><strong>Falta publicar las reglas de Firebase.</strong> La app está funcionando
+        en modo antiguo: guarda bien, pero dos personas a la vez pueden pisarse.
+        Publica el archivo <code>firestore.rules</code> en la consola de Firebase y recarga.</span>
+      </div>`);
+  }
+}
+
+// ── Migración: del documento único a las colecciones ──
+// Sólo puede decidirse cuando TODAS las colecciones han respondido al menos una
+// vez: una colección vacía y una que aún no ha cargado se ven idénticas, y
+// confundirlas fue justo lo que destruyó los datos en agosto.
+function revisarMigracion(){
+  if(migracionHecha||modoLegado)return;
+  if(colsListas.size!==COLECCIONES.length)return;
+  const hayEnColecciones=COLECCIONES.some(c=>(DB[c]||[]).length>0);
+  if(hayEnColecciones){migracionHecha=true;return;}
+
+  migracionHecha=true;   // no reintentar en cada snapshot
+  fbDB.collection(DOC_LEGADO.col).doc(DOC_LEGADO.doc).get().then(snap=>{
+    if(!snap.exists)return;
+    const viejo=snap.data();
+    const total=COLECCIONES.reduce((s,c)=>s+((viejo[c]||[]).length),0);
+    if(!total){log('El documento antiguo no tiene registros — nada que migrar');return;}
+
+    log('Migrando '+total+' registro(s) del documento antiguo a las colecciones...');
+    setStatus('connecting','Migrando datos...');
+    const cambios=[];
+    COLECCIONES.forEach(col=>{
+      (viejo[col]||[]).forEach((item,i)=>{
+        if(!item)return;
+        const id=String(item.id||(col.charAt(0)+Date.now()+'_'+i));
+        cambios.push({tipo:'set',col,id,item:{...item,id}});
+      });
+    });
+    if(viejo.settings)cambios.push({tipo:'set',col:'config',id:'settings',item:viejo.settings});
+
+    escribirLote(cambios)
+      .then(()=>{
+        // El documento antiguo NO se borra: es el respaldo de la migración.
+        log('Migración completa: '+cambios.length+' documento(s) creados. byny/data se conserva intacto.');
+        setStatus('connected','● Sincronizado');
+        return fbDB.collection('config').doc('migracion').set({
+          hecha:true,fecha:new Date().toISOString(),registros:cambios.length,
+          origen:'byny/data',clientId:CLIENT_ID||getClientId()
+        }).catch(()=>{});
+      })
+      .catch(e=>{
+        log('ERROR en la migración: '+e.code+' — '+e.message);
+        setStatus('error','Falló la migración: '+(e.code||''));
+        alert('⚠ No se pudo migrar los datos al formato nuevo.\n\nMotivo: '+(e.code||e.message)+
+              '\n\nTus datos siguen intactos en el documento antiguo (byny/data). Avísale a Byron.');
+      });
+  }).catch(e=>log('No se pudo leer el documento antiguo: '+e.code));
 }
 
 function log(msg){
@@ -4510,6 +4625,11 @@ function daysSinceLastPay(bikeId){
 
 function renderAdmin(){
   const el=document.getElementById('admin-driver-list');if(!el)return;
+  // showDriverProfile() oculta la lista y nada volvía a mostrarla: al agregar un
+  // conductor se guardaba bien pero la lista seguía escondida detrás de la ficha,
+  // así que parecía que no se había registrado hasta recargar la página.
+  const ficha=document.getElementById('admin-driver-profile');
+  if(!ficha||ficha.style.display==='none'||!ficha.style.display)el.style.display='';
   const active=(DB.drivers||[]).filter(d=>d.active!==false);
   if(!active.length){
     el.innerHTML='<div class="empty"><strong>Sin conductores registrados</strong><br>Agrega el primer conductor con el botón de arriba.</div>';
@@ -4977,7 +5097,7 @@ function saveDriver(){
       b.driverId=null;
     }
   });
-  save();closeM('driver-modal');showSaved('Conductor guardado');render();renderAdmin();
+  save();closeM('driver-modal');showSaved('Conductor guardado');backToDriverList();render();renderAdmin();
   // Upload any pending documents now that we have a driverId
   if(window.pendingUploads&&Object.keys(window.pendingUploads).length&&fbStorage){
     const uploadPromises=Object.entries(window.pendingUploads).map(([docType,file])=>{

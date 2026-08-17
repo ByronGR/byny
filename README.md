@@ -13,13 +13,33 @@ vercel --prod
 
 ## Firebase
 
-The app stores business data in Firestore at:
+### One document per record (v4.0)
+
+Business data lives in per-record collections:
 
 ```text
-byny/data
+bikes/{id}   drivers/{id}   payments/{id}   expenses/{id}   retiros/{id}
+graceDays/{id}   contracts/{id}   appointments/{id}   renterHistory/{id}
+config/settings
 ```
 
-Use `firestore.rules` and `storage.rules` as the starting security rules in Firebase. They require Firebase Auth for reading and writing business data.
+Until v4.0 the entire business was a single document, `byny/data`. Every save
+rewrote the whole thing, so two people saving at the same time overwrote each
+other — the same failure mode that destroyed the data in August, just from a
+different direction. Writes are now per record: `save()` diffs the in-memory `DB`
+against the last known server state and writes only what changed, in a batch.
+
+**`byny/data` is deliberately left in place** as the migration's backup, and the
+rules still allow it. Do not delete it.
+
+**Publish `firestore.rules` before deploying** a build that expects collections.
+If the rules are missing the app detects `permission-denied`, falls back to the
+legacy document, and shows a banner — it degrades rather than breaking — but that
+fallback still has the concurrent-write problem.
+
+The migration runs once, automatically, and only after *every* collection has
+returned a snapshot. An empty collection and one that has not loaded yet look
+identical, and confusing the two is exactly what caused the original data loss.
 
 The app is admin-only. There is one login (Firebase Auth, LOCAL persistence so the
 session lasts) and four tabs: **Inicio**, **Motos**, **Dinero**, **Ajustes**. Motos and

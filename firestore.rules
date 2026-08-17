@@ -1,13 +1,40 @@
 rules_version = '2';
 
+// Byny Rental — reglas de Firestore
+//
+// Un registro = un documento. Antes TODO el negocio vivía en un único documento
+// (byny/data), así que cada guardado reescribía el archivo completo y dos
+// personas guardando a la vez se pisaban la una a la otra.
+//
+// El documento antiguo byny/data SIGUE PERMITIDO a propósito: es el respaldo de
+// la migración y la app puede volver a él si estas reglas todavía no se han
+// publicado. No lo borres.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /byny/data {
-      allow read, write: if request.auth != null;
+
+    function autenticado() {
+      return request.auth != null;
     }
 
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    // ── Datos del negocio: un documento por registro ──
+    match /bikes/{bikeId}            { allow read, write: if autenticado(); }
+    match /drivers/{driverId}        { allow read, write: if autenticado(); }
+    match /payments/{paymentId}      { allow read, write: if autenticado(); }
+    match /expenses/{expenseId}      { allow read, write: if autenticado(); }
+    match /retiros/{retiroId}        { allow read, write: if autenticado(); }
+    match /graceDays/{graceId}       { allow read, write: if autenticado(); }
+    match /contracts/{contractId}    { allow read, write: if autenticado(); }
+    match /appointments/{apptId}     { allow read, write: if autenticado(); }
+    match /renterHistory/{histId}    { allow read, write: if autenticado(); }
+
+    // ── Ajustes y estado de la migración ──
+    match /config/{docId}            { allow read, write: if autenticado(); }
+
+    // ── Legado: respaldo de la migración. NO BORRAR ──
+    match /byny/{docId}              { allow read, write: if autenticado(); }
+
+    // Todo lo demás, cerrado.
+    match /{document=**}             { allow read, write: if false; }
   }
 }
