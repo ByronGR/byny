@@ -105,8 +105,25 @@ Before v3.0 the payment upload looked up an element id that did not exist
 Storage path at all — both wrote base64 straight into the document. If you touch this code,
 keep images out of the document.
 
+## Writing to Firestore
+
+Everything written goes through `limpiarParaFirestore()` first. Firestore rejects
+`undefined`, `NaN` and `Infinity` outright with a bare `invalid-argument`, naming neither
+the field nor the record — a single stray value fails the whole save. `saveBike` shipped
+`photos: undefined` when a moto had no photos, so **every moto created without photos
+failed to save**.
+
+Records are also size-checked before the write. A Firestore document is capped at 1 MB,
+and `saveBike`/`saveEditBike` still put moto and document photos into the record as
+base64, so this is reachable. The check reports which record is oversized instead of
+letting Firestore return `invalid-argument`. Moving those photos to Storage, as payment
+and expense receipts already are, is the real fix and is still outstanding.
+
 ## Known issues (still open)
 
+- **Moto and document photos are still stored as base64 inside the bike record.** Payment
+  and expense receipts go to Storage; these do not. Four photos will exceed the 1 MB
+  document limit.
 - **Drivers are matched to bikes by first-name substring** (`b.renter.includes(fname)`).
   Two drivers sharing a first name, or a name contained in another, resolve to the wrong bike.
 - The repository is public. Nothing sensitive is in it any more (the Bancolombia account

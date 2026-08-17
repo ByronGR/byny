@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- Byny Rental v4.2 -->
+<!-- Byny Rental v4.3 -->
 <title>Byny Rental</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -122,6 +122,8 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
 .panel{display:none}.panel.on{display:block}
 
 /* ═══ PRIMER ARRANQUE ═══ */
+.opt{font-weight:600;font-size:9px;letter-spacing:.06em;color:var(--ink4);text-transform:uppercase;margin-left:5px}
+.hint-opt{font-size:11.5px;color:var(--ink3);font-weight:500;margin:-.35rem 0 .9rem;line-height:1.5}
 .first-run-card{margin-bottom:1.5rem;border:1px solid var(--line2)}
 .first-run-title{font-size:19px;font-weight:700;margin-bottom:.4rem}
 .first-run-text{font-size:14px;color:var(--ink2);line-height:1.65;margin-bottom:1.25rem;max-width:52ch}
@@ -602,7 +604,7 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
   <div class="brand">
     <span class="brand-name">Byny Rental</span>
     <span class="brand-sub">Medellín</span>
-    <span class="brand-ver">v4.2</span>
+    <span class="brand-ver">v4.3</span>
   </div>
   <div class="topbar-right">
     <span class="date-chip" id="hdr-date"></span>
@@ -1183,7 +1185,8 @@ body{color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;overflow
     </div>
     <input type="hidden" id="edit-bike-id">
     <div class="frow"><label>Nombre / placa</label><input type="text" id="edit-bk-name"></div>
-    <div class="frow"><label>Arrendatario</label><input type="text" id="edit-bk-renter" placeholder="Dejar vacío si no tiene arrendatario"></div>
+    <div class="frow"><label>Arrendatario <span class="opt">opcional</span></label><input type="text" id="edit-bk-renter" placeholder="Dejar vacío si la moto está libre"></div>
+    <div class="hint-opt">El conductor y la fecha de inicio son opcionales: puedes guardar la moto sin asignarla.</div>
     <div class="fgrid">
       <div class="frow"><label>Inicio arriendo</label><input type="date" id="edit-bk-start"></div>
       <div class="frow"><label>Tarifa/día actual (COP)</label>
@@ -1721,6 +1724,26 @@ let modoLegado=false;          // true si las reglas nuevas aún no están publi
 let colsListas=new Set();      // colecciones que ya respondieron al menos una vez
 let migracionHecha=false;
 
+// Firestore rechaza undefined, NaN e Infinity, y corta a 1 MB por documento.
+// Un solo campo undefined tumbaba el guardado entero con "invalid-argument",
+// sin decir cuál era. Se limpia antes de escribir.
+function limpiarParaFirestore(v){
+  if(v===undefined||v===null)return null;
+  if(typeof v==='number')return isFinite(v)?v:null;
+  if(Array.isArray(v))return v.filter(x=>x!==undefined).map(limpiarParaFirestore);
+  if(typeof v==='object'){
+    const out={};
+    Object.keys(v).forEach(k=>{if(v[k]!==undefined)out[k]=limpiarParaFirestore(v[k]);});
+    return out;
+  }
+  return v;
+}
+
+const LIMITE_DOC=900*1024;   // margen bajo el máximo real de 1 MB
+function demasiadoGrande(item){
+  try{return JSON.stringify(item).length>LIMITE_DOC;}catch(e){return false;}
+}
+
 function firmar(o){try{return JSON.stringify(o);}catch(e){return String(o);}}
 
 // Qué cambió respecto a lo que hay en el servidor.
@@ -1780,9 +1803,17 @@ function save(){
       encolar(cambios);
       log('ERROR al guardar: '+e.code+' — '+e.message);
       setStatus('error','NO se guardó en Firebase: '+(e.code||''));
+      const explicacion=
+        e.code==='registro-muy-grande'
+          ? e.message
+        : e.code==='invalid-argument'
+          ? 'Firebase rechazó un dato del registro (un campo vacío o una foto demasiado grande).'
+        : e.code==='permission-denied'
+          ? 'Faltan permisos. Revisa que las reglas de Firestore estén publicadas.'
+        : (e.code||e.message);
       alert('⚠ No se pudo guardar en Firebase.\n\n'+
-            'Motivo: '+(e.code||e.message)+'\n\n'+
-            'El cambio quedó guardado en este dispositivo.\n'+
+            explicacion+'\n\n'+
+            'El cambio quedó guardado en este dispositivo y se reintentará solo.\n'+
             'NO cierres la app hasta que el indicador diga "Guardado en Firebase".');
     });
 }
@@ -1838,10 +1869,18 @@ function escribirLote(cambios){
   for(let i=0;i<cambios.length;i+=450)trozos.push(cambios.slice(i,i+450));
   return trozos.reduce((prev,trozo)=>prev.then(()=>{
     const lote=fbDB.batch();
-    trozo.forEach(c=>{
+    for(const c of trozo){
       const ref=fbDB.collection(c.col).doc(String(c.id));
-      if(c.tipo==='set')lote.set(ref,c.item);else lote.delete(ref);
-    });
+      if(c.tipo==='del'){lote.delete(ref);continue;}
+      const limpio=limpiarParaFirestore(c.item);
+      if(demasiadoGrande(limpio)){
+        return Promise.reject(Object.assign(
+          new Error('El registro '+c.col+'/'+c.id+' pesa demasiado. Suele ser una foto '+
+                    'guardada dentro del registro en vez de en Storage.'),
+          {code:'registro-muy-grande'}));
+      }
+      lote.set(ref,limpio);
+    }
     return lote.commit();
   }),Promise.resolve());
 }
@@ -2720,7 +2759,7 @@ function saveBike(){
     oilInterval:'',oilLast:'',
     notes:document.getElementById('bk-notes').value.trim(),
     maintSchedule:getBkMaintItems(),
-    photos:Object.keys(photos).length?photos:undefined,
+    photos:Object.keys(photos).length?photos:null,   // nunca undefined: Firestore lo rechaza
     registeredAt:tod(),
   };
   if(driver){
@@ -4268,7 +4307,10 @@ function renderBikes(){
           <div style="font-size:14px;font-weight:700;color:var(--ink)">${b.name}</div>
           <div style="font-size:11px;color:var(--leaf);margin-top:1px;font-weight:600">● Disponible para asignar</div>
         </div>
-        <button class="btn sm" onclick="openEditBike('${b.id}')">Asignar conductor</button>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn sm ghost" onclick="openEditBike('${b.id}')">Editar</button>
+          <button class="btn sm solid" onclick="openEditBike('${b.id}')">Asignar conductor</button>
+        </div>
       </div>`).join('');
   }
 
